@@ -10,6 +10,7 @@
  */
 
 //TODO: make the number of "state" qubits determined at compilation time in system.cuh
+double g_beta;
 
 
 __global__ void initialize_state(double *state_re, double *state_im, uint len){
@@ -33,19 +34,21 @@ void init_state(ComplexVec& state, uint Dim){
     if(state.size()!=Dim)
         throw std::runtime_error("ERROR: init_state() failed");
     
-   //vorrei inizializzarlo a zero ma non so bene come farlo
-// ma va bene iniziare da uno stato che è combinazione lineare di autostati?
+
     initialize_state<<<suqa::blocks,suqa::threads, 0, suqa::stream1>>>(state.data_re, state.data_im,Dim);
     cudaDeviceSynchronize();
-	 suqa::apply_h(state, bm_spin);
+
+
+	 suqa::apply_x(state, bm_spin[1]);
+	 suqa::apply_h(state, bm_spin[1]);
+/*	for(uint indice=0; indice<5; ++indice){
+		suqa::apply_t(state, bm_spin[0]);
+	}
+
+*/
 
 
 
-
-//    state.resize(Dim);
-//    std::fill_n(state.begin(), state.size(), 0.0);
-//    state[1].x = 1.0; //TWOSQINV; 
-////    state[3] = -TWOSQINV; 
 }
 
 
@@ -76,25 +79,21 @@ void evolution(ComplexVec& state, const double& t, const int& n){
 //	uint mask = cmask;
 //    for(const auto& qs : qstate){
 //        mask |= (1U << qs);
-//    }
-
-    const double dt = t/(double)n;
 
 
 
 
-    for(uint ti=0; ti<(uint)n; ++ti){
-	for (uint iii=0; iii<3; iii++){
+	for (uint iii=0; iii<3; ++iii){
 		exp_it_id_x_x(  state, bm_spin, iii, dt);
  	}
-    }
+
 }
 
 
 /* Measure facilities */
 const uint op_bits = 3; // 2^op_bits is the number of eigenvalues for the observable
 const bmReg bm_op = bm_spin; // where the measure has to be taken
-const std::vector<double> op_vals = {1.0,-3.0,-3.0,-3.0,-3.0,-3.0,-3.0,1.0}; // eigvals
+const std::vector<double> op_vals = {3.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,3.0}; // eigvals
 
  
 // change basis to the observable basis somewhere in the system registers
@@ -142,6 +141,25 @@ double measure_X(ComplexVec& state, pcg& rgen){
 
 std::vector<double> C_weigthsums = {1./3, 2./3, 1.0};
 
+
+
+
+void apply_C(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
+    switch(Ci){
+        case 0U:
+            suqa::apply_h(state,bm_states[0]);
+            break;
+        case 1U:
+            suqa::apply_h(state,bm_states[1]);
+            break;
+        case 2U:
+            suqa::apply_h(state,bm_states[2]);
+            break;
+        default:
+            throw std::runtime_error("ERROR: wrong move selection");
+    }
+}
+/*
 void apply_C(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
 	if(Ci>3){
 	suqa::apply_h(state, bm_states[0]);
@@ -150,7 +168,7 @@ void apply_C(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
 	suqa::apply_h(state,  bm_states[Ci]);
 	}
  }
-
+*/
 
 void apply_C_inverse(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
     apply_C(state, bm_states, Ci);
