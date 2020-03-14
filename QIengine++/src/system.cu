@@ -32,15 +32,22 @@ __global__ void initialize_state(double *state_re, double *state_im, uint len){
 void init_state(ComplexVec& state, uint Dim){
 
     if(state.size()!=Dim)
-        throw std::runtime_error("ERROR: init_state() failed");
+	throw std::runtime_error("ERROR: init_state() failed");
     
 
     initialize_state<<<suqa::blocks,suqa::threads, 0, suqa::stream1>>>(state.data_re, state.data_im,Dim);
     cudaDeviceSynchronize();
+/*
+	suqa::apply_h(state, bm_spin[1]);
+	suqa::apply_cx(state, bm_spin[1], bm_spin[2]);
+	suqa::apply_u1(state, bm_spin1[1], acos(-1.0));
+*/
 
 
-	 suqa::apply_x(state, bm_spin[1]);
-	 suqa::apply_h(state, bm_spin[1]);
+	suqa::apply_x(state, bm_spin[1]);
+	suqa::apply_h(state, bm_spin[1]);
+	suqa::apply_cx(state, bm_spin[1], bm_spin[0]);
+
 /*	for(uint indice=0; indice<5; ++indice){
 		suqa::apply_t(state, bm_spin[0]);
 	}
@@ -66,7 +73,7 @@ void hamiltonian( ComplexVec& state, const bmReg& q){
 
 }
 
-void exp_it_id_x_x( ComplexVec& state, const bmReg& q, uint pos_id, uint phase_t){
+void exp_it_id_x_x( ComplexVec& state, const bmReg& q, uint pos_id, double phase_t){
 	
 	suqa::apply_pauli_TP_rotation(state, {q[(pos_id+1)%3],q[(pos_id+2)%3]}, {PAULI_X,PAULI_X}, phase_t);
 
@@ -84,7 +91,7 @@ void evolution(ComplexVec& state, const double& t, const int& n){
 
 
 	for (uint iii=0; iii<3; ++iii){
-		exp_it_id_x_x(  state, bm_spin, iii, dt);
+		exp_it_id_x_x(  state, bm_spin, iii, t);
  	}
 
 }
