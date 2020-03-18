@@ -1,13 +1,7 @@
 #include "system.cuh"
 #include "include/Rand.hpp"
 
-/* d4 gauge theory - two plaquettes
- 
-   link state 3 qubits
-   system state: 4 links -> 12 qubits
-   +1 ancillary qubit
 
- */
 
 //TODO: make the number of "state" qubits determined at compilation time in system.cuh
 double g_beta;
@@ -37,41 +31,17 @@ void init_state(ComplexVec& state, uint Dim){
 
     initialize_state<<<suqa::blocks,suqa::threads, 0, suqa::stream1>>>(state.data_re, state.data_im,Dim);
     cudaDeviceSynchronize();
-/*
-	suqa::apply_h(state, bm_spin[1]);
-	suqa::apply_cx(state, bm_spin[1], bm_spin[2]);
-	suqa::apply_u1(state, bm_spin1[1], acos(-1.0));
-*/
 
 
 	suqa::apply_x(state, bm_spin[1]);
 	suqa::apply_h(state, bm_spin[1]);
 	suqa::apply_cx(state, bm_spin[1], bm_spin[0]);
 
-/*	for(uint indice=0; indice<5; ++indice){
-		suqa::apply_t(state, bm_spin[0]);
-	}
-
-*/
-
-
 
 }
 
 
 
-void hamiltonian( ComplexVec& state, const bmReg& q){
-	suqa::apply_x(state, q[0]);
-	suqa::apply_x(state, q[1]);
-
-	suqa::apply_x(state, q[0]);
-	suqa::apply_x(state, q[2]);
-
-	suqa::apply_x(state, q[1]);
-	suqa::apply_x(state, q[2]);
-/* Quantum evolutor of the state */
-
-}
 
 void exp_it_id_x_x( ComplexVec& state, const bmReg& q, uint pos_id, double phase_t){
 	
@@ -80,15 +50,6 @@ void exp_it_id_x_x( ComplexVec& state, const bmReg& q, uint pos_id, double phase
 }
 
 void evolution(ComplexVec& state, const double& t, const int& n){
-
-
-//    uint cmask = (1U << q_control);
-//	uint mask = cmask;
-//    for(const auto& qs : qstate){
-//        mask |= (1U << qs);
-
-
-
 
 	for (uint iii=0; iii<3; ++iii){
 		exp_it_id_x_x(  state, bm_spin, iii, t);
@@ -100,17 +61,22 @@ void evolution(ComplexVec& state, const double& t, const int& n){
 /* Measure facilities */
 const uint op_bits = 3; // 2^op_bits is the number of eigenvalues for the observable
 const bmReg bm_op = bm_spin; // where the measure has to be taken
-const std::vector<double> op_vals = {3.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,3.0}; // eigvals
+const std::vector<double> op_vals = {2.0,0.0,2.0,0.0,-2.0,0.0,-2.0,0.0}; // eigvals
 
  
 // change basis to the observable basis somewhere in the system registers
 void apply_measure_rotation(ComplexVec& state){
-    hamiltonian( state, bm_spin);
+	suqa::apply_h(state, bm_spin[0]);
+	suqa::apply_h(state, bm_spin[1]);
+	suqa::apply_h(state, bm_spin[2]);
+	suqa::apply_cx(state, bm_spin[0], bm_spin[1]);
+	suqa::apply_cx(state, bm_spin[0], bm_spin[2]);
+	suqa::apply_u1(state,bm_spin[2], M_PI*0.5);
 }
 
 // inverse of the above function
 void apply_measure_antirotation(ComplexVec& state){
- 	hamiltonian( state, bm_spin);
+ 	apply_measure_rotation(state);
 }
 
 // map the classical measure recorded in creg_vals
@@ -123,7 +89,7 @@ double get_meas_opvals(const uint& creg_vals){
 // actually perform the measure
 // there is no need to change it
 double measure_X(ComplexVec& state, pcg& rgen){
-  /*  std::vector<uint> classics(op_bits);
+    std::vector<uint> classics(op_bits);
     
     apply_measure_rotation(state);
 
@@ -140,8 +106,7 @@ double measure_X(ComplexVec& state, pcg& rgen){
         meas |= (classics[i] << i);
     }
 
-    return get_meas_opvals(meas);*/
-	return 0.0;
+    return get_meas_opvals(meas);
 }
 
 /* Moves facilities */
@@ -166,16 +131,7 @@ void apply_C(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
             throw std::runtime_error("ERROR: wrong move selection");
     }
 }
-/*
-void apply_C(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
-	if(Ci>3){
-	suqa::apply_h(state, bm_states[0]);
-	}
-	else {
-	suqa::apply_h(state,  bm_states[Ci]);
-	}
- }
-*/
+
 
 void apply_C_inverse(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
     apply_C(state, bm_states, Ci);
