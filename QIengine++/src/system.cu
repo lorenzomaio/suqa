@@ -52,7 +52,7 @@ void exp_it_id_x_x( ComplexVec& state, const bmReg& q, uint pos_id, double phase
 void evolution(ComplexVec& state, const double& t, const int& n){
 
 	for (uint iii=0; iii<3; ++iii){
-		exp_it_id_x_x(  state, bm_spin, iii, t);
+		exp_it_id_x_x(  state, bm_spin, iii, -t);
  	}
 
 }
@@ -116,25 +116,16 @@ std::vector<double> C_weigthsums = {1./3, 2./3, 1.0};
 
 
 
-void apply_C(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
-    switch(Ci){
-        case 0U:
-            suqa::apply_h(state,bm_states[0]);
-            break;
-        case 1U:
-            suqa::apply_h(state,bm_states[1]);
-            break;
-        case 2U:
-            suqa::apply_h(state,bm_states[2]);
-            break;
-        default:
-            throw std::runtime_error("ERROR: wrong move selection");
-    }
+void apply_C(ComplexVec& state, const uint &Ci){
+    if(Ci>2)
+        throw std::runtime_error("ERROR: wrong move selection");
+
+    suqa::apply_h(state,bm_spin[Ci]);
 }
 
 
-void apply_C_inverse(ComplexVec& state, const bmReg& bm_states, const uint &Ci){
-    apply_C(state, bm_states, Ci);
+void apply_C_inverse(ComplexVec& state, const uint &Ci){
+    apply_C(state, Ci);
 }
 
 std::vector<double> get_C_weigthsums(){ return C_weigthsums; }
