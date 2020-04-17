@@ -20,8 +20,6 @@ extern double g_beta;
 
 void init_state(ComplexVec& state, uint Dim);
 
-
-
 void evolution(ComplexVec& state, const double& t, const int& n);
 
 void apply_C(ComplexVec& state, const uint &Ci);

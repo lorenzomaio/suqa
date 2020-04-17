@@ -4,11 +4,10 @@
 #include <string>
 #include <cstring>
 #include <stdio.h>
-#include <bits/stdc++.h>
-#include <unistd.h>
+//#include <bits/stdc++.h>
+//#include <unistd.h>
 #include <cmath>
 #include <cassert>
-#include "Rand.hpp"
 #include <chrono>
 #include <cuda.h>
 #include <cuda_runtime_api.h>

@@ -1,5 +1,5 @@
 #include "system.cuh"
-#include "include/Rand.hpp"
+#include "Rand.hpp"
 
 
 
@@ -14,7 +14,7 @@ __global__ void initialize_state(double *state_re, double *state_im, uint len){
         state_im[i] = 0.0;
         i += gridDim.x*blockDim.x;
     }
-    if(blockIdx.x*blockDim.x+threadIdx.x==1){
+    if(blockIdx.x*blockDim.x+threadIdx.x==0){
         state_re[0] = 1.0;
         state_im[0] = 0.0;
     }
@@ -29,15 +29,11 @@ void init_state(ComplexVec& state, uint Dim){
 	throw std::runtime_error("ERROR: init_state() failed");
     
 
-    initialize_state<<<suqa::blocks,suqa::threads, 0, suqa::stream1>>>(state.data_re, state.data_im,Dim);
-    cudaDeviceSynchronize();
-
+    initialize_state<<<suqa::blocks,suqa::threads>>>(state.data_re, state.data_im,Dim);
 
 	suqa::apply_x(state, bm_spin[1]);
 	suqa::apply_h(state, bm_spin[1]);
 	suqa::apply_cx(state, bm_spin[1], bm_spin[0]);
-
-
 }
 
 
@@ -52,7 +48,7 @@ void exp_it_id_x_x( ComplexVec& state, const bmReg& q, uint pos_id, double phase
 void evolution(ComplexVec& state, const double& t, const int& n){
 
 	for (uint iii=0; iii<3; ++iii){
-		exp_it_id_x_x(  state, bm_spin, iii, -t);
+		exp_it_id_x_x(state, bm_spin, iii, -t);
  	}
 
 }
@@ -107,6 +103,7 @@ double measure_X(ComplexVec& state, pcg& rgen){
     }
 
     return get_meas_opvals(meas);
+    return 0.0;
 }
 
 /* Moves facilities */
