@@ -135,11 +135,6 @@ int main(int argc, char** argv){
     uint count_accepted = 0U;
     if(!file_exists(outfilename.c_str())){
         FILE * fil = fopen(outfilename.c_str(), "w");
-<<<<<<< HEAD:QIengine++/src/main.cu
-//        fprintf(fil, "# E%s\n",(qms::Xmatstem!="")?" A":"");
-//        fprintf(fil, "# E\n");
-=======
->>>>>>> master:src/qms.cu
         fprintf(fil, "# E A\n");
         fclose(fil);
     }
