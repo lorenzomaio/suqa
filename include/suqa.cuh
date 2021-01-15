@@ -10,22 +10,22 @@
 
 //#ifdef CUDA
 
-#if !defined(NDEBUG) 
+//#if !defined(NDEBUG) 
 extern double *host_state_re, *host_state_im;
-#define DEBUG_READ_STATE(state) {\
+#define DUMP_STATE(state) {\
     cudaMemcpyAsync(host_state_re,state.data_re,state.size()*sizeof(double),cudaMemcpyDeviceToHost,suqa::stream1); \
     cudaMemcpyAsync(host_state_im,state.data_im,state.size()*sizeof(double),cudaMemcpyDeviceToHost,suqa::stream2); \
     cudaDeviceSynchronize(); \
-    printf("vnorm = %.12lg\n",suqa::vnorm(state));\
-    sparse_print((double*)host_state_re,(double*)host_state_im, state.size()); \
-} 
+}
+//#define DEBUG_READ_STATE(state) {\
+//    DEBUG_DUMP_STATE(state); \
+//    printf("vnorm = %.12lg\n",suqa::vnorm(state));\
+//    sparse_print((double*)host_state_re,(double*)host_state_im, state.size()); \
+//} 
 //#else
-//#define DEBUG_READ_STATE(state)
-//#endif
-
-#else
+//#define DEBUG_DUMP_STATE(state)
 #define DEBUG_READ_STATE(state)
-#endif
+//#endif
 
 //const double TWOSQINV = 1./sqrt(2.);
 #define TWOSQINV 0.7071067811865475 

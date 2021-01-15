@@ -29,7 +29,7 @@ $(OBJDIR)/%.cu.o: $(SRC)/%.cu $(INCLUDES) $(OBJDIR)
 	$(NVCC) $(NVCCFLAGS) -o $@ -c $< 
 	
 qms: $(OBJDIR)/qms.cu.o $(OBJDIR)/system.cu.o $(OBJDIR)/suqa.cu.o $(OBJDIR)/Rand.cpp.o $(OBJDIR)/io.cpp.o
-	$(NVCC) $^ -o $@
+	$(NVCC) $^ -o $@ -llapack
 
 test_evolution: NVCCFLAGS += -DNDEBUG
 test_evolution: $(OBJDIR)/test_evolution.cu.o $(OBJDIR)/system.cu.o $(OBJDIR)/suqa.cu.o $(OBJDIR)/io.cpp.o

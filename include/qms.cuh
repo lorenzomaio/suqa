@@ -463,17 +463,13 @@ void setup(double beta){
     qms::fill_bitmap();
     qms::fill_W_utils(beta, qms::t_PE_factor);
 
-#if !defined(NDEBUG)
     HANDLE_CUDACALL(cudaHostAlloc((void**)&host_state_re,qms::Dim*sizeof(double),cudaHostAllocDefault));
     HANDLE_CUDACALL(cudaHostAlloc((void**)&host_state_im,qms::Dim*sizeof(double),cudaHostAllocDefault));
-#endif
 }
 
 void clear(){
-#ifndef NDEBUG
     HANDLE_CUDACALL(cudaFreeHost(host_state_re));
     HANDLE_CUDACALL(cudaFreeHost(host_state_im));
-#endif
 
 }
 

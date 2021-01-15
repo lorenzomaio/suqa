@@ -25,9 +25,7 @@ void suqa::print_banner(){
 //#include <thrust/execution_policy.h>
 //#include <thrust/functional.h>
 
-#ifndef NDEBUG
 double *host_state_re, *host_state_im;
-#endif
 
 double *host_partial_ret, *dev_partial_ret;
 
@@ -1219,10 +1217,8 @@ void suqa::setup(uint Dim){
         HANDLE_CUDACALL( cudaStreamCreate( &suqa::stream2 ) );
     }
 
-#if !defined(NDEBUG)
     HANDLE_CUDACALL(cudaHostAlloc((void**)&host_state_re,Dim*sizeof(double),cudaHostAllocDefault));
     HANDLE_CUDACALL(cudaHostAlloc((void**)&host_state_im,Dim*sizeof(double),cudaHostAllocDefault));
-#endif
 }
 
 void suqa::clear(){
@@ -1231,10 +1227,8 @@ void suqa::clear(){
     cudaFree(dev_partial_ret); 
     cudaFreeHost(host_partial_ret);
 
-#ifndef NDEBUG
     HANDLE_CUDACALL(cudaFreeHost(host_state_re));
     HANDLE_CUDACALL(cudaFreeHost(host_state_im));
-#endif
 
     HANDLE_CUDACALL( cudaStreamDestroy( suqa::stream1 ) );
     if (suqa::stream1!=suqa::stream2) {
