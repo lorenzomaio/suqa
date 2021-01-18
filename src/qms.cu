@@ -205,6 +205,7 @@ int main(int argc, char** argv){
             if(iiii%100==0){
                 double rho_diff_re[64]; //,rho_A_prod[8][8];
                 double E_sng=0.0, E_sqr=0.0;
+                double E_isolated=0.0;
                 uint cci=0;
                 for(uint i=0;i<8;++i) for(uint j=0;j<8;++j){
                 //        rho_diff_re[cci]=rho_proj[i][j][0]*rho_proj[i][j][0]/(sampling*sampling);
@@ -212,6 +213,7 @@ int main(int argc, char** argv){
                     //rho_A_prod[i][j]=0.0;
 
                     if(i==j){
+                        E_isolated+=eev[i]*tmp_rho[i][j][0];
                         E_sng+=eev[i]*rho_diff_re[cci];
                         E_sqr+=eev[i]*eev[i]*rho_diff_re[cci];
                         
@@ -220,6 +222,9 @@ int main(int argc, char** argv){
                 //        printf("%.4lg %.4lg %.4lg\n",rho_proj[i][j][0]*rho_proj[i][j][0]/sampling,exp(-qsa::beta*eev[i])/Z, rho_diff_re[cci]);
                     cci++;
                 }
+
+//                printf("E_iso: %.6lg, E_meas: %.6lg\n",E_isolated,qms::E_measures.back());
+
                 double A_sng=0.0, A_sqr=0.0;
                 double A_sng_exact=0.0;
                 for(int coeff=0;coeff<16;++coeff){
