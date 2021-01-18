@@ -22,17 +22,6 @@
 
 //XXX: test only, remove after
 extern double *host_state_re, *host_state_im;
-const double z = 1./sqrt(2.0);
-const double ees[8][8] = {
-    { z, 0., 0.,-z, 0., 0., 0., 0.},
-    { 0., 0., 0., 0., 0., z, -z, 0.},
-    { 0.5, 0., 0., 0.5, 0., -0.5, -0.5, 0.},
-    { 0., z,-z, 0., 0., 0., 0., 0.},
-    { 0., 0.,0., 0., z, 0., 0., -z},
-    { 0., 0.5,0.5, 0., -0.5, 0., 0., -0.5},
-    { 0.5, 0., 0., 0.5, 0., 0.5, 0.5, 0.},
-    { 0., 0.5, 0.5, 0., 0.5, 0., 0., 0.5},
-};
 const double eev[8] = {-1.,-1.,-1.,-1.,-1.,-1.,3.,3.};
 
 
@@ -162,6 +151,7 @@ int main(int argc, char** argv){
     int iiii=0;
     double rho_proj[8][8][2];
     for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) rho_proj[i][j][k]=0.0;
+    
     double TrDist_discrepancy, TrDist_discrepancy_prev=100000.;
     double Energy_discrepancy, Energy_discrepancy_prev=100000.;
     double Aoper_discrepancy, Aoper_discrepancy_prev=100000.;
@@ -184,7 +174,10 @@ int main(int argc, char** argv){
         DEBUG_CALL(cout<<"metro step: "<<s<<endl);
         take_measure = (s>s0+(uint)thermalization and (s-s0)%qms::reset_each ==0U);
 
-        int ret = qms::metro_step(take_measure);
+        double tmp_rho[8][8][2];
+        for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) tmp_rho[i][j][k]=0.0;
+
+        int ret = qms::metro_step(take_measure, tmp_rho);
 
         // check conditions of measurement
         if(ret<0){ // failed rethermalization, reinitialize state
@@ -192,30 +185,22 @@ int main(int argc, char** argv){
             //ensure new rethermalization
             s0 = s+1; 
         }
-        if(ret==2 or ret==4){
+
+        if(take_measure and (ret==2 or ret==4)){
             // measure rho as weighted average of eigenstates projectors
-            DUMP_STATE(qms::gState);
-            for(uint i=0;i<8;++i){
-                    for(uint j=0;j<8;++j){
-                    double melr=0.0,meli=0.0;
-                    for(uint II=0U;II<qms::gState.size();++II){
-                        for(uint III=0U;III<qms::gState.size();++III){
-                            if((II>>3)==(III>>3)){
-//                        if((I&sysI)==sysI){ // Identity on all other qubits
-//                           printf("%u : %u %u\n",I, I&7, (I>>3)&7);
-                                melr+=(host_state_re[II]*host_state_re[III]+host_state_im[II]*host_state_im[III])*ees[i][II&7U]*ees[j][III&7U];
-                                meli+=(host_state_im[II]*host_state_re[III]-host_state_re[II]*host_state_im[III])*ees[i][II&7U]*ees[j][III&7U];
-                            }
-                        }
-                    }
-                    rho_proj[i][j][0]+=melr*melr;
-                    rho_proj[i][j][1]+=meli*meli;
-//                    fprintf(outrho,"%.12lg %.12lg ",melr,meli);
-                }
-//                fprintf(outrho,"\n");
-            }
+//            DUMP_STATE(qms::gState);
 
             iiii++;
+
+//            printf("rho:\n");
+            for(uint i=0;i<8;++i){
+                for(uint j=0;j<8;++j){
+                    rho_proj[i][j][0]+=tmp_rho[i][j][0];
+                    rho_proj[i][j][1]+=tmp_rho[i][j][1];
+//                    printf("(%.2lg %.2lg) ",rho_proj[i][j][0]/iiii,rho_proj[i][j][1]/iiii); 
+                }
+//                printf("\n");
+            }
 
             if(iiii%100==0){
                 double rho_diff_re[64]; //,rho_A_prod[8][8];
@@ -332,7 +317,7 @@ int main(int argc, char** argv){
         }
         if(s%perc_mstep==0){
             cout<<"iteration: "<<s<<"/"<<qms::metro_steps<<endl;
-            save_measures(outfilename);
+//            save_measures(outfilename);
         }
     }
 

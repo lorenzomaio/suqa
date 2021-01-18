@@ -4,6 +4,17 @@
 #include "suqa.cuh"
 #include "complex_defines.cuh"
 
+const double z = 1./sqrt(2.0);
+const double ees[8][8] = {
+    { z, 0., 0.,-z, 0., 0., 0., 0.},
+    { 0., 0., 0., 0., 0., z, -z, 0.},
+    { 0.5, 0., 0., 0.5, 0., -0.5, -0.5, 0.},
+    { 0., z,-z, 0., 0., 0., 0., 0.},
+    { 0., 0.,0., 0., z, 0., 0., -z},
+    { 0., 0.5,0.5, 0., -0.5, 0., 0., -0.5},
+    { 0.5, 0., 0., 0.5, 0., 0.5, 0.5, 0.},
+    { 0., 0.5, 0.5, 0., 0.5, 0., 0., 0.5},
+};
 
 // defined in src/system.cu
 void evolution(ComplexVec& state, const double& t, const int& n);
@@ -318,7 +329,7 @@ std::vector<double> extract_rands(uint n){
 }
 
 
-int metro_step(bool take_measure){
+int metro_step(bool take_measure, double tmp_rho[][8][2]){
 
     // return values:
     // 1 -> step accepted, not measured
@@ -366,6 +377,33 @@ int metro_step(bool take_measure){
             for(uint ei=0U; ei<ene_qbits; ++ei){
                 suqa::apply_reset(gState, bm_enes_new[ei],rangen.doub());
             }
+
+
+            DUMP_STATE(qms::gState);
+
+//            printf("vnorm = %.12lg\n",suqa::vnorm(qms::gState));
+//            sparse_print((double*)host_state_re,(double*)host_state_im, qms::gState.size()); 
+
+            for(uint i=0;i<8;++i){
+                    for(uint j=0;j<8;++j){
+                    double melr=0.0,meli=0.0;
+                    for(uint II=0U;II<qms::gState.size();++II){
+                        for(uint III=0U;III<qms::gState.size();++III){
+                            if((II>>3)==(III>>3)){
+//                        if((I&sysI)==sysI){ // Identity on all other qubits
+//                           printf("%u : %u %u\n",I, I&7, (I>>3)&7);
+                                melr+=(host_state_re[II]*host_state_re[III]+host_state_im[II]*host_state_im[III])*ees[i][II&7U]*ees[j][III&7U];
+                                meli+=(host_state_im[II]*host_state_re[III]-host_state_re[II]*host_state_im[III])*ees[i][II&7U]*ees[j][III&7U];
+                            }
+                        }
+                    }
+                    tmp_rho[i][j][0]=melr;
+                    tmp_rho[i][j][1]=meli;
+//                    fprintf(outrho,"%.12lg %.12lg ",melr,meli);
+                }
+//                fprintf(outrho,"\n");
+            }
+
             X_measures.push_back(measure_X(gState,rangen));
             DEBUG_CALL(std::cout<<"  X measure : "<<X_measures.back()<<std::endl); 
             DEBUG_CALL(std::cout<<"\n\nAfter X measure"<<std::endl);
