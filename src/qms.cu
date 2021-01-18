@@ -83,7 +83,7 @@ void allocate_state(ComplexVec& state, uint Dim){
 
 int main(int argc, char** argv){
     if(argc < 8){
-        printf("usage: %s <beta> <g_beta> <metro steps> <reset each> <num state qbits> <num ene qbits> <output file path> [--max-reverse <max reverse attempts> (20)] [--seed <seed> (random)] [--ene-min <min energy> (0.0)] [--ene-max <max energy> (1.0)] [--PE-steps <steps of PE evolution> (10)] [--thermalization <steps> (100)] [--record-reverse]\n", argv[0]);
+        printf("usage: %s <beta> <g_beta> <metro steps> <reset each> <num state qbits> <num ene qbits> <output file path> [--max-reverse <max reverse attempts> (20)] [--seed <seed> (random)] [--ene-min <min energy> (0.0)] [--ene-max <max energy> (1.0)] [--PE-steps <steps of PE evolution> (10)] [--thermalization <steps> (100)] [--record-reverse] [--walltime (0)]\n", argv[0]);
         exit(1);
     }
 
@@ -141,20 +141,42 @@ int main(int argc, char** argv){
     uint perc_mstep = (qms::metro_steps+19)/20; // batched saves
     
     uint count_accepted = 0U;
-    if(!file_exists(outfilename.c_str())){
-        FILE * fil = fopen(outfilename.c_str(), "w");
-        fprintf(fil, "# E A\n");
-        fclose(fil);
-    }
+//    if(!file_exists(outfilename.c_str())){
+//        FILE * fil = fopen(outfilename.c_str(), "w");
+//        fprintf(fil, "# E A\n");
+//        fclose(fil);
+//    }
 
     //XXX: systematic test
     int iiii=0;
     double rho_proj[8][8][2];
-    for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) rho_proj[i][j][k]=0.0;
     
+    string rhomat_fname="rho_mat_qms_b"+to_string(beta)+"_rt_"+to_string(qms::reset_each)+".txt";
+
+    if( access( rhomat_fname.c_str(), F_OK ) != -1 ){
+        printf("%s exists\n",rhomat_fname.c_str());
+        FILE * fil = fopen(rhomat_fname.c_str(), "r");
+        if(fscanf(fil,"%d\n",&iiii)!=1){ printf("Wrong reading!\n"); exit(1);}
+        printf("Restarting from idx: %d\n",iiii);
+        for(int i=0;i<8;++i){
+            for(int j=0;j<8;++j) for(int k=0;k<2;++k){
+                if(fscanf(fil,"%lg ",&rho_proj[i][j][k])!=1){ printf("Wrong reading!\n"); exit(1);}
+            }
+            if(fscanf(fil,"\n") !=0){ printf("Wrong reading!\n"); exit(1);}
+        }
+        fclose(fil);
+        printf("Loading previous rho matrix");
+    }else{
+        for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) rho_proj[i][j][k]=0.0;
+    }
+
     double TrDist_discrepancy, TrDist_discrepancy_prev=100000.;
     double Energy_discrepancy, Energy_discrepancy_prev=100000.;
     double Aoper_discrepancy, Aoper_discrepancy_prev=100000.;
+
+    int TrDist_ctr=0;
+    bool TrDist_first10done = false;
+    std::vector<double> TrDist_recents(10);
 
     // partition function precomputation
     double Z=0.0;
@@ -167,6 +189,8 @@ int main(int argc, char** argv){
         E_sng_exact+=eev[i]*exp(-beta*eev[i])/Z;
         E_sqr_exact+=eev[i]*eev[i]*exp(-beta*eev[i])/Z;
     }
+
+    auto t_prev = std::chrono::high_resolution_clock::now();
 
     bool take_measure;
     uint s0 = 0U;
@@ -202,7 +226,11 @@ int main(int argc, char** argv){
 //                printf("\n");
             }
 
-            if(iiii%100==0){
+            auto t_tmp = std::chrono::high_resolution_clock::now();
+            double secs_aft = (1./1000.)*std::chrono::duration<double, std::milli>(t_tmp-t_prev).count();
+//            if(iiii%100==0){
+            if(secs_aft>2.0){
+                t_prev=t_tmp;
                 double rho_diff_re[64]; //,rho_A_prod[8][8];
                 double E_sng=0.0, E_sqr=0.0;
                 double E_isolated=0.0;
@@ -286,9 +314,26 @@ int main(int argc, char** argv){
                     TrDist_discrepancy = tr_dist;
                 }
 
+                TrDist_recents[TrDist_ctr]=TrDist_discrepancy;
+                TrDist_ctr=(TrDist_ctr+1)%10;
+                if(!TrDist_first10done and TrDist_ctr==0) TrDist_first10done = true;
+
+                double TrDist_ave=0.0, TrDist_fluct=0.0;
+                if(TrDist_first10done){
+                    for(int trdi=0;trdi<10;++trdi){
+                        TrDist_ave+=TrDist_recents[trdi];
+                        TrDist_fluct+=TrDist_recents[trdi]*TrDist_recents[trdi];
+                    }
+                    TrDist_ave/=10.0;
+                    TrDist_fluct-=10.0*TrDist_ave*TrDist_ave;
+                    TrDist_fluct*=10./9.;
+                    TrDist_fluct=sqrt(TrDist_fluct);
+                }
+
+
                 double thr_discr=3.0;
 
-                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_discrepancy,Energy_discrepancy,Aoper_discrepancy);
+                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
 
                 if(    (abs(1.0-TrDist_discrepancy_prev/TrDist_discrepancy)<1e-3)
                    and (abs(Energy_discrepancy)>thr_discr or abs(1.0-Energy_discrepancy_prev/Energy_discrepancy)<1e-5)
@@ -298,12 +343,12 @@ int main(int argc, char** argv){
                     if( access( outfilename.c_str(), F_OK ) == -1 ){
                         FILE * fil = fopen(outfilename.c_str(), "w");
                         //        fprintf(fil, "# E%s\n",(Xmatstem!="")?" A":"");
-                        fprintf(fil, "#beta retherm E_mean E_err E_exact A_mean A_err A_exact TrDist\n");
+                        fprintf(fil, "#beta retherm E_mean E_err E_exact A_mean A_err A_exact TrDist TrDist_err\n");
                         fclose(fil);
                     }
                     FILE * fil = fopen(outfilename.c_str(), "a");
-                    fprintf(fil, "%.8lg\t%2d\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\n", 
-                            beta, qms::reset_each, E_sng, E_std, E_sng_exact, A_sng, A_std, A_sng_exact, TrDist_discrepancy);
+                    fprintf(fil, "%.8lg\t%2d\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\n", 
+                            beta, qms::reset_each, E_sng, E_std, E_sng_exact, A_sng, A_std, A_sng_exact, TrDist_ave, TrDist_fluct);
                     fclose(fil);
 
                     break;
@@ -323,6 +368,27 @@ int main(int argc, char** argv){
         if(s%perc_mstep==0){
             cout<<"iteration: "<<s<<"/"<<qms::metro_steps<<endl;
 //            save_measures(outfilename);
+        }
+
+        auto t_mid = std::chrono::high_resolution_clock::now();
+        double secs_passed = (1./1000.)*std::chrono::duration<double, std::milli>(t_mid-t_start).count();
+        if((args.walltime>0 and secs_passed>args.walltime) or access( "stop", F_OK ) != -1 ){
+            remove("stop");
+            // save rho and stop
+            
+            FILE * outrho = fopen(rhomat_fname.c_str(),"w");
+
+            fprintf(outrho,"%d\n",iiii);
+            for(int i=0;i<8;++i){
+                for(int j=0;j<8;++j) for(int k=0;k<2;++k){
+                    fprintf(outrho,"%.12lg ",rho_proj[i][j][k]);
+                }
+                fprintf(outrho,"\n");
+            }
+            fclose(outrho);
+
+            printf("Closing due to walltime limit reached\n");
+            break;
         }
     }
 

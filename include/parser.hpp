@@ -21,6 +21,7 @@ struct arg_list{
     int pe_steps = 10; 
     int thermalization = 100;
     bool record_reverse = false;
+    int walltime = 0;
     
     friend ostream& operator<<(ostream& o, const arg_list& al);
 };
@@ -40,6 +41,7 @@ ostream& operator<<(ostream& o, const arg_list& al){
     o<<"steps of PE evolution: "<<al.pe_steps<<endl;
     o<<"thermalization: "<<al.thermalization<<endl;
     o<<"record reverse: "<<al.record_reverse<<endl;
+    o<<"walltime: "<<al.walltime<<endl;
     return o;
 }
 
@@ -130,6 +132,15 @@ void parse_arguments(arg_list& args, int argc, char** argv){
            throw "ERROR: set value after '--thermalization' flag"; 
        
        args.thermalization = stod(argmap_inv[tmp_idx+1].c_str(), NULL); 
+    }
+
+    // (int) walltime
+    tmp_idx = argmap["--walltime"];
+    if(tmp_idx>=fixed_args){
+       if(tmp_idx+1>= argc)
+           throw "ERROR: set value after '--walltime' flag"; 
+       
+       args.walltime = stod(argmap_inv[tmp_idx+1].c_str(), NULL); 
     }
 
 
