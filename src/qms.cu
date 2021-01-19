@@ -231,21 +231,21 @@ int main(int argc, char** argv){
 //            if(iiii%100==0){
             if(secs_aft>2.0){
                 t_prev=t_tmp;
-                double rho_diff_re[64]; //,rho_A_prod[8][8];
+                complex rho_diff[64]; //,rho_A_prod[8][8];
                 double E_sng=0.0, E_sqr=0.0;
                 double E_isolated=0.0;
                 uint cci=0;
                 for(uint i=0;i<8;++i) for(uint j=0;j<8;++j){
                 //        rho_diff_re[cci]=rho_proj[i][j][0]*rho_proj[i][j][0]/(sampling*sampling);
-                    rho_diff_re[cci]=rho_proj[i][j][0]/iiii;
+                    rho_diff_re[cci]=rho_proj[i][j][0]/iiii + I * rho_proj[i][j][1]/iiii;
                     //rho_A_prod[i][j]=0.0;
 
                     if(i==j){
                         E_isolated+=eev[i]*tmp_rho[i][j][0];
-                        E_sng+=eev[i]*rho_diff_re[cci];
-                        E_sqr+=eev[i]*eev[i]*rho_diff_re[cci];
+                        E_sng+=eev[i]*creal(rho_diff[cci]);
+                        E_sqr+=eev[i]*eev[i]*creal(rho_diff[cci]);
                         
-                        rho_diff_re[cci]-=exp(-beta*eev[i])/Z;
+                        rho_diff[cci]-=exp(-beta*eev[i])/Z;
                     }
                 //        printf("%.4lg %.4lg %.4lg\n",rho_proj[i][j][0]*rho_proj[i][j][0]/sampling,exp(-qsa::beta*eev[i])/Z, rho_diff_re[cci]);
                     cci++;
@@ -272,7 +272,7 @@ int main(int argc, char** argv){
                         int p = Amat_coo[coeff2][0];        
                         int l = Amat_coo[coeff2][1];        
                         if(p!=k) continue;
-                        double a_kl= Amat_val[coeff][0]; // A_kl
+                        double a_kl= Amat_val[coeff2][0]; // A_kl
 
                         for(int n=0; n<8; ++n) for(int m=0; m<8; ++m){
                                 A_sqr+=ees[n][l]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik*a_kl;
@@ -292,12 +292,14 @@ int main(int argc, char** argv){
                 Energy_discrepancy = (E_sng-E_sng_exact)/E_std;
 
                 // eigensolver
-                lapack_int lwork=3*8-1;
-                double work[lwork];
                 lapack_int n=8;
+                lapack_int lwork=2*n-1;
+                complex work[lwork];
+                double rwork[3*n-2];
                 lapack_int info;
                 double dist_eigs[n];
-                LAPACK_dsyev("N", "U", &n, rho_diff_re, &n, dist_eigs,work,&lwork,&info);
+//                LAPACK_dsyev("N", "U", &n, rho_diff_re, &n, dist_eigs,work,&lwork,&info);
+                LAPACK_cheev("N", "U", &n, rho_diff, &n, dist_eigs,work,&lwork,&rwork,&info);
 
                 if(info){
                     printf("Error in eigenvalue routine\n");
