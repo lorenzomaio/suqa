@@ -1,14 +1,15 @@
 #include <iostream>
 #include <vector>
-#include <complex>
 #include <string>
 #include <cstring>
 #include <stdio.h>
+#include <complex.h>
+#include <cstdio>
 //#include <bits/stdc++.h>
 //#include <unistd.h>
 #include <cmath>
 #include <cassert>
-#include <lapack.h>
+#include <lapacke.h>
 #include "Rand.hpp"
 #include <chrono>
 #include <cuda.h>
@@ -231,19 +232,19 @@ int main(int argc, char** argv){
 //            if(iiii%100==0){
             if(secs_aft>2.0){
                 t_prev=t_tmp;
-                complex rho_diff[64]; //,rho_A_prod[8][8];
+                lapack_complex_double rho_diff[64]; //,rho_A_prod[8][8];
                 double E_sng=0.0, E_sqr=0.0;
                 double E_isolated=0.0;
                 uint cci=0;
                 for(uint i=0;i<8;++i) for(uint j=0;j<8;++j){
                 //        rho_diff_re[cci]=rho_proj[i][j][0]*rho_proj[i][j][0]/(sampling*sampling);
-                    rho_diff_re[cci]=rho_proj[i][j][0]/iiii + I * rho_proj[i][j][1]/iiii;
+                    rho_diff[cci]=lapack_make_complex_double(rho_proj[i][j][0]/iiii,rho_proj[i][j][1]/iiii);
                     //rho_A_prod[i][j]=0.0;
 
                     if(i==j){
                         E_isolated+=eev[i]*tmp_rho[i][j][0];
-                        E_sng+=eev[i]*creal(rho_diff[cci]);
-                        E_sqr+=eev[i]*eev[i]*creal(rho_diff[cci]);
+                        E_sng+=eev[i]*rho_proj[i][j][0]/iiii;
+                        E_sqr+=eev[i]*eev[i]*rho_proj[i][j][0]/iiii;
                         
                         rho_diff[cci]-=exp(-beta*eev[i])/Z;
                     }
@@ -293,13 +294,14 @@ int main(int argc, char** argv){
 
                 // eigensolver
                 lapack_int n=8;
-                lapack_int lwork=2*n-1;
-                complex work[lwork];
-                double rwork[3*n-2];
+//                lapack_int lwork=2*n-1;
+//                double work[lwork];
+//                double rwork[3*n-2];
+                char jobz = 'N', uplo = 'U';
                 lapack_int info;
                 double dist_eigs[n];
 //                LAPACK_dsyev("N", "U", &n, rho_diff_re, &n, dist_eigs,work,&lwork,&info);
-                LAPACK_cheev("N", "U", &n, rho_diff, &n, dist_eigs,work,&lwork,&rwork,&info);
+                info = LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo, n, rho_diff, n, dist_eigs);
 
                 if(info){
                     printf("Error in eigenvalue routine\n");
