@@ -31,8 +31,8 @@ const double Amat_val[16][2] = {{1,0},{0,-1},{0,1},{1,0},{1,0},{0,-1},{0,1},{1,0
 
 using namespace std;
 
-#define NUMRHOS 5000
-#define NUMBOOTS 5000
+#define NUMRHOS 100000
+#define NUMBOOTS 100000
 
 void save_rho(string rhomat_fname,double rho_proj[8][8][2],int iiii){
     FILE * outrho = fopen(rhomat_fname.c_str(),"w");
@@ -307,7 +307,7 @@ int main(int argc, char** argv){
 		}
 		// now I can actually estimate the std
 		est_trdist_doub = sqrt((est_trdist_doub-est_trdist_sing*est_trdist_sing/NUMBOOTS)/(NUMBOOTS-1));
-		std::cout<<"stdTrDist "<<est_trdist_doub<<endl;
+		std::cout<<"TrDist "<<est_trdist_sing/NUMBOOTS<<" "<<est_trdist_doub<<endl;
 
 		break;
             }
