@@ -31,8 +31,21 @@ const double Amat_val[16][2] = {{1,0},{0,-1},{0,1},{1,0},{1,0},{0,-1},{0,1},{1,0
 
 using namespace std;
 
+#define NUMRHOS 5000
+#define NUMBOOTS 5000
 
+void save_rho(string rhomat_fname,double rho_proj[8][8][2],int iiii){
+    FILE * outrho = fopen(rhomat_fname.c_str(),"w");
 
+    fprintf(outrho,"%d\n",iiii);
+    for(int i=0;i<8;++i){
+	for(int j=0;j<8;++j) for(int k=0;k<2;++k){
+	    fprintf(outrho,"%.12lg ",rho_proj[i][j][k]);
+	}
+	fprintf(outrho,"\n");
+    }
+    fclose(outrho);
+}
 
 
 #define NUM_THREADS 128
@@ -151,8 +164,11 @@ int main(int argc, char** argv){
     //XXX: systematic test
     int iiii=0;
     double rho_proj[8][8][2];
+
+    int store_counter = 0;
+    double rho_proj_store[NUMRHOS][8][8][2];
     
-    string rhomat_fname="rho_mat_qms_b"+to_string(beta)+"_rt_"+to_string(qms::reset_each)+".txt";
+    string rhomat_fname="new_rho_mat_qms_b"+to_string(beta)+"_rt_"+to_string(qms::reset_each)+".txt";
 
     if( access( rhomat_fname.c_str(), F_OK ) != -1 ){
         printf("%s exists\n",rhomat_fname.c_str());
@@ -212,188 +228,246 @@ int main(int argc, char** argv){
         }
 
         if(take_measure and (ret==2 or ret==4)){
+            auto t_tmp = std::chrono::high_resolution_clock::now();
+            double secs_aft = (1./1000.)*std::chrono::duration<double, std::milli>(t_tmp-t_prev).count();
+//            if(iiii%100==0){
+            if(secs_aft>0.02){
             // measure rho as weighted average of eigenstates projectors
 //            DUMP_STATE(qms::gState);
 
-            iiii++;
+//            iiii++;
 
 //            printf("rho:\n");
             for(uint i=0;i<8;++i){
                 for(uint j=0;j<8;++j){
                     rho_proj[i][j][0]+=tmp_rho[i][j][0];
                     rho_proj[i][j][1]+=tmp_rho[i][j][1];
+                    rho_proj_store[store_counter][i][j][0]=tmp_rho[i][j][0];
+                    rho_proj_store[store_counter][i][j][1]=tmp_rho[i][j][1];
 //                    printf("(%.2lg %.2lg) ",rho_proj[i][j][0]/iiii,rho_proj[i][j][1]/iiii); 
                 }
 //                printf("\n");
             }
+	    store_counter++;
+	    cout<<store_counter<<endl;
+	    if(store_counter==NUMRHOS){ //bootstrap trace distances
 
-            auto t_tmp = std::chrono::high_resolution_clock::now();
-            double secs_aft = (1./1000.)*std::chrono::duration<double, std::milli>(t_tmp-t_prev).count();
-//            if(iiii%100==0){
-            if(secs_aft>2.0){
-                t_prev=t_tmp;
-                lapack_complex_double rho_diff[64]; //,rho_A_prod[8][8];
-                double E_sng=0.0, E_sqr=0.0;
-                double E_isolated=0.0;
-                uint cci=0;
-                for(uint i=0;i<8;++i) for(uint j=0;j<8;++j){
-                //        rho_diff_re[cci]=rho_proj[i][j][0]*rho_proj[i][j][0]/(sampling*sampling);
-                    rho_diff[cci]=lapack_make_complex_double(rho_proj[i][j][0]/iiii,rho_proj[i][j][1]/iiii);
-                    //rho_A_prod[i][j]=0.0;
+		//vector<double> trdist_estimates(NUMBOOTS);
+		double est_trdist_sing=0.0, est_trdist_doub=0.0;	
+		for(int boi=0; boi<NUMBOOTS;++boi){
+			double rho_proj_trest[8][8][2];
+			for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) rho_proj_trest[i][j][k]=0.0;
+			for(int kkkk=0; kkkk<NUMRHOS; ++kkkk){
+			    int rint = qms::rangen.randint(0,NUMRHOS);
+			    for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) rho_proj_trest[i][j][k]+=rho_proj_store[rint][i][j][k];
+				
+			}
+			
+			lapack_complex_double rho_diff_trest[64]; //,rho_A_prod[8][8];
+			uint cci=0;
+			for(uint i=0;i<8;++i) for(uint j=0;j<8;++j){
+			//        rho_diff_trest_re[cci]=rho_proj_trest[i][j][0]*rho_proj_trest[i][j][0]/(sampling*sampling);
+			    rho_diff_trest[cci]=lapack_make_complex_double(rho_proj_trest[i][j][0]/NUMRHOS,rho_proj_trest[i][j][1]/NUMRHOS);
+			    //rho_A_prod[i][j]=0.0;
 
-                    if(i==j){
-                        E_isolated+=eev[i]*tmp_rho[i][j][0];
-                        E_sng+=eev[i]*rho_proj[i][j][0]/iiii;
-                        E_sqr+=eev[i]*eev[i]*rho_proj[i][j][0]/iiii;
-                        
-                        rho_diff[cci]-=exp(-beta*eev[i])/Z;
-                    }
-                //        printf("%.4lg %.4lg %.4lg\n",rho_proj[i][j][0]*rho_proj[i][j][0]/sampling,exp(-qsa::beta*eev[i])/Z, rho_diff_re[cci]);
-                    cci++;
-                }
+			    if(i==j){
+              rho_diff_trest[cci]-=exp(-beta*eev[i])/Z;
+			    }
+			//        printf("%.4lg %.4lg %.4lg\n",rho_proj[i][j][0]*rho_proj[i][j][0]/sampling,exp(-qsa::beta*eev[i])/Z, rho_diff_trest_re[cci]);
+			    cci++;
+			}
+			// eigensolver
+			lapack_int n=8;
+	//                lapack_int lwork=2*n-1;
+	//                double work[lwork];
+	//                double rwork[3*n-2];
+			char jobz = 'N', uplo = 'U';
+			lapack_int info;
+			double dist_eigs[n];
+	//                LAPACK_dsyev("N", "U", &n, rho_diff_trest_re, &n, dist_eigs,work,&lwork,&info);
+			info = LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo, n, rho_diff_trest, n, dist_eigs);
 
-//                printf("E_iso: %.6lg, E_meas: %.6lg\n",E_isolated,qms::E_measures.back());
+			if(info){
+			    printf("Error in eigenvalue routine\n");
+			}else{
+			    double tr_dist=0.0;
+	//                    printf("dist eigs:\n");
+			    for(uint i=0; i<8; ++i){
+	//                        printf("%.10lg\n",dist_eigs[i]);
+            tr_dist += abs(dist_eigs[i]);
+			    }
+			    tr_dist*=0.5;
 
-                double A_sng=0.0, A_sqr=0.0;
-                double A_sng_exact=0.0;
-                for(int coeff=0;coeff<16;++coeff){
-                    int i = Amat_coo[coeff][0];        
-                    int k = Amat_coo[coeff][1];        
-                    double a_ik= Amat_val[coeff][0]; // A_ik
+	//                    printf("Trace distance: %.12lg\n",tr_dist);
+			    //trdist_estimates[boi] = tr_dist;
+//			    cout<<"tr_dist: "<<tr_dist<<endl;
+          est_trdist_sing+=tr_dist;
+          est_trdist_doub+=tr_dist*tr_dist;
+			}
+		}
+		// now I can actually estimate the std
+		est_trdist_doub = sqrt((est_trdist_doub-est_trdist_sing*est_trdist_sing/NUMBOOTS)/(NUMBOOTS-1));
+		std::cout<<"stdTrDist "<<est_trdist_doub<<endl;
 
-                    for(int n=0; n<8; ++n){
-                        for(int m=0; m<8; ++m){
-                            A_sng+=ees[n][k]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik;
-//                            A_sqr+=ees[n][k]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik*a_ik;
-                        }
-                        A_sng_exact+=ees[n][k]*exp(-beta*eev[n])/Z*ees[n][i]*a_ik;
-                    }
+		break;
+            }
 
-                    for(int coeff2=0;coeff2<16;++coeff2){
-                        int p = Amat_coo[coeff2][0];        
-                        int l = Amat_coo[coeff2][1];        
-                        if(p!=k) continue;
-                        double a_kl= Amat_val[coeff2][0]; // A_kl
-
-                        for(int n=0; n<8; ++n) for(int m=0; m<8; ++m){
-                                A_sqr+=ees[n][l]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik*a_kl;
-                        }
-                    }
-                }
-
-                printf("A_sng=%.8lg\tA_sqr=%.8lg; A_sng_exact=%.8lg\n",A_sng,A_sqr,A_sng_exact);
-                double A_std = sqrt((A_sqr-A_sng*A_sng)/iiii);
-                Aoper_discrepancy = (A_sng-A_sng_exact)/A_std;
-
-
-                double E_std = sqrt((E_sqr-E_sng*E_sng)/iiii);
-                double E_std_exact = sqrt((E_sqr_exact-E_sng_exact*E_sng_exact)/iiii);
-                printf("E_exact: %.12lg, E: %.12lg, dE: %.12lg; rel_discr: %.12lg\n",E_sng_exact,E_sng,E_std_exact,abs(E_sng-E_sng_exact)/E_std_exact);
-
-                Energy_discrepancy = (E_sng-E_sng_exact)/E_std;
-
-                // eigensolver
-                lapack_int n=8;
-//                lapack_int lwork=2*n-1;
-//                double work[lwork];
-//                double rwork[3*n-2];
-                char jobz = 'N', uplo = 'U';
-                lapack_int info;
-                double dist_eigs[n];
-//                LAPACK_dsyev("N", "U", &n, rho_diff_re, &n, dist_eigs,work,&lwork,&info);
-                info = LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo, n, rho_diff, n, dist_eigs);
-
-                if(info){
-                    printf("Error in eigenvalue routine\n");
-                }else{
-                    double tr_dist=0.0;
-//                    printf("dist eigs:\n");
-                    for(uint i=0; i<8; ++i){
-//                        printf("%.10lg\n",dist_eigs[i]);
-                        tr_dist += abs(dist_eigs[i]);
-                    }
-                    tr_dist*=0.5;
-
-//                    printf("Trace distance: %.12lg\n",tr_dist);
-                    TrDist_discrepancy = tr_dist;
-                }
-
-                TrDist_recents[TrDist_ctr]=TrDist_discrepancy;
-                TrDist_ctr=(TrDist_ctr+1)%10;
-                if(!TrDist_first10done and TrDist_ctr==0) TrDist_first10done = true;
-
-                double TrDist_ave=0.0, TrDist_fluct=0.0;
-                if(TrDist_first10done){
-                    for(int trdi=0;trdi<10;++trdi){
-                        TrDist_ave+=TrDist_recents[trdi];
-                        TrDist_fluct+=TrDist_recents[trdi]*TrDist_recents[trdi];
-                    }
-                    TrDist_ave/=10.0;
-                    TrDist_fluct-=10.0*TrDist_ave*TrDist_ave;
-                    TrDist_fluct*=10./9.;
-                    TrDist_fluct=sqrt(TrDist_fluct);
-                }
-
-
-                double thr_discr=3.0;
-
-                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
-
-                if(    (abs(1.0-TrDist_discrepancy_prev/TrDist_discrepancy)<1e-3)
-                   and (abs(Energy_discrepancy)>thr_discr or abs(1.0-Energy_discrepancy_prev/Energy_discrepancy)<1e-5)
-                   and (abs(Aoper_discrepancy)>thr_discr or abs(1.0-Aoper_discrepancy_prev/Aoper_discrepancy)<1e-5)){
-                    printf("Discrepancies converged\n");
-
-                    if( access( outfilename.c_str(), F_OK ) == -1 ){
-                        FILE * fil = fopen(outfilename.c_str(), "w");
-                        //        fprintf(fil, "# E%s\n",(Xmatstem!="")?" A":"");
-                        fprintf(fil, "#beta retherm E_mean E_err E_exact A_mean A_err A_exact TrDist TrDist_err\n");
-                        fclose(fil);
-                    }
-                    FILE * fil = fopen(outfilename.c_str(), "a");
-                    fprintf(fil, "%.8lg\t%2d\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\n", 
-                            beta, qms::reset_each, E_sng, E_std, E_sng_exact, A_sng, A_std, A_sng_exact, TrDist_ave, TrDist_fluct);
-                    fclose(fil);
-
-                    break;
-                }
-
-                TrDist_discrepancy_prev = TrDist_discrepancy;
-                Energy_discrepancy_prev = Energy_discrepancy;
-                Aoper_discrepancy_prev = Aoper_discrepancy;
-
+//                t_prev=t_tmp;
+//                lapack_complex_double rho_diff[64]; //,rho_A_prod[8][8];
+//                double E_sng=0.0, E_sqr=0.0;
+//                double E_isolated=0.0;
+//                uint cci=0;
+//                for(uint i=0;i<8;++i) for(uint j=0;j<8;++j){
+//                //        rho_diff_re[cci]=rho_proj[i][j][0]*rho_proj[i][j][0]/(sampling*sampling);
+//                    rho_diff[cci]=lapack_make_complex_double(rho_proj[i][j][0]/iiii,rho_proj[i][j][1]/iiii);
+//                    //rho_A_prod[i][j]=0.0;
+//
+//                    if(i==j){
+//                        E_isolated+=eev[i]*tmp_rho[i][j][0];
+//                        E_sng+=eev[i]*rho_proj[i][j][0]/iiii;
+//                        E_sqr+=eev[i]*eev[i]*rho_proj[i][j][0]/iiii;
+//                        
+//                        rho_diff[cci]-=exp(-beta*eev[i])/Z;
+//                    }
+//                //        printf("%.4lg %.4lg %.4lg\n",rho_proj[i][j][0]*rho_proj[i][j][0]/sampling,exp(-qsa::beta*eev[i])/Z, rho_diff_re[cci]);
+//                    cci++;
+//                }
+//
+////                printf("E_iso: %.6lg, E_meas: %.6lg\n",E_isolated,qms::E_measures.back());
+//
+//                double A_sng=0.0, A_sqr=0.0;
+//                double A_sng_exact=0.0;
+//                for(int coeff=0;coeff<16;++coeff){
+//                    int i = Amat_coo[coeff][0];        
+//                    int k = Amat_coo[coeff][1];        
+//                    double a_ik= Amat_val[coeff][0]; // A_ik
+//
+//                    for(int n=0; n<8; ++n){
+//                        for(int m=0; m<8; ++m){
+//                            A_sng+=ees[n][k]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik;
+////                            A_sqr+=ees[n][k]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik*a_ik;
+//                        }
+//                        A_sng_exact+=ees[n][k]*exp(-beta*eev[n])/Z*ees[n][i]*a_ik;
+//                    }
+//
+//                    for(int coeff2=0;coeff2<16;++coeff2){
+//                        int p = Amat_coo[coeff2][0];        
+//                        int l = Amat_coo[coeff2][1];        
+//                        if(p!=k) continue;
+//                        double a_kl= Amat_val[coeff2][0]; // A_kl
+//
+//                        for(int n=0; n<8; ++n) for(int m=0; m<8; ++m){
+//                                A_sqr+=ees[n][l]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik*a_kl;
+//                        }
+//                    }
+//                }
+//
+////                printf("A_sng=%.8lg\tA_sqr=%.8lg; A_sng_exact=%.8lg\n",A_sng,A_sqr,A_sng_exact);
+//                double A_std = sqrt((A_sqr-A_sng*A_sng)/iiii);
+//                Aoper_discrepancy = (A_sng-A_sng_exact)/A_std;
+//
+//
+//                double E_std = sqrt((E_sqr-E_sng*E_sng)/iiii);
+//                double E_std_exact = sqrt((E_sqr_exact-E_sng_exact*E_sng_exact)/iiii);
+////                printf("E_exact: %.12lg, E: %.12lg, dE: %.12lg; rel_discr: %.12lg\n",E_sng_exact,E_sng,E_std_exact,abs(E_sng-E_sng_exact)/E_std_exact);
+//
+//                Energy_discrepancy = (E_sng-E_sng_exact)/E_std;
+//
+//                // eigensolver
+//                lapack_int n=8;
+////                lapack_int lwork=2*n-1;
+////                double work[lwork];
+////                double rwork[3*n-2];
+//                char jobz = 'N', uplo = 'U';
+//                lapack_int info;
+//                double dist_eigs[n];
+////                LAPACK_dsyev("N", "U", &n, rho_diff_re, &n, dist_eigs,work,&lwork,&info);
+//                info = LAPACKE_zheev(LAPACK_COL_MAJOR,jobz,uplo, n, rho_diff, n, dist_eigs);
+//
+//                if(info){
+//                    printf("Error in eigenvalue routine\n");
+//                }else{
+//                    double tr_dist=0.0;
+////                    printf("dist eigs:\n");
+//                    for(uint i=0; i<8; ++i){
+////                        printf("%.10lg\n",dist_eigs[i]);
+//                        tr_dist += abs(dist_eigs[i]);
+//                    }
+//                    tr_dist*=0.5;
+//
+////                    printf("Trace distance: %.12lg\n",tr_dist);
+//                    TrDist_discrepancy = tr_dist;
+//                }
+//
+//                TrDist_recents[TrDist_ctr]=TrDist_discrepancy;
+//                TrDist_ctr=(TrDist_ctr+1)%10;
+//                if(!TrDist_first10done and TrDist_ctr==0) TrDist_first10done = true;
+//
+//                double TrDist_ave=0.0, TrDist_fluct=0.0;
+//                if(TrDist_first10done){
+//                    for(int trdi=0;trdi<10;++trdi){
+//                        TrDist_ave+=TrDist_recents[trdi];
+//                        TrDist_fluct+=TrDist_recents[trdi]*TrDist_recents[trdi];
+//                    }
+//                    TrDist_ave/=10.0;
+//                    TrDist_fluct-=10.0*TrDist_ave*TrDist_ave;
+//                    TrDist_fluct*=10./9.;
+//                    TrDist_fluct=sqrt(TrDist_fluct);
+//                }
+//
+//
+////                double thr_discr=3.0;
+////
+////                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
+////		fflush(stdout);
+//
+////                if(    (abs(1.0-TrDist_discrepancy_prev/TrDist_discrepancy)<1e-3)
+////                   and (abs(Energy_discrepancy)>thr_discr or abs(1.0-Energy_discrepancy_prev/Energy_discrepancy)<1e-5)
+////                   and (abs(Aoper_discrepancy)>thr_discr or abs(1.0-Aoper_discrepancy_prev/Aoper_discrepancy)<1e-5)){
+////                    printf("Discrepancies converged\n");
+////
+////                    if( access( outfilename.c_str(), F_OK ) == -1 ){
+////                        FILE * fil = fopen(outfilename.c_str(), "w");
+////                        //        fprintf(fil, "# E%s\n",(Xmatstem!="")?" A":"");
+////                        fprintf(fil, "#beta retherm E_mean E_err E_exact A_mean A_err A_exact TrDist TrDist_err\n");
+////                        fclose(fil);
+////                    }
+////                    FILE * fil = fopen(outfilename.c_str(), "a");
+////                    fprintf(fil, "%.8lg\t%2d\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\n", 
+////                            beta, qms::reset_each, E_sng, E_std, E_sng_exact, A_sng, A_std, A_sng_exact, TrDist_ave, TrDist_fluct);
+////                    fclose(fil);
+////
+////		    save_rho(rhomat_fname,rho_proj,iiii);
+////                    break;
+////                }
+//
+//                TrDist_discrepancy_prev = TrDist_discrepancy;
+//                Energy_discrepancy_prev = Energy_discrepancy;
+//                Aoper_discrepancy_prev = Aoper_discrepancy;
+//
             }
 
         }
 
-        if(ret==1 or ret==2){
-            count_accepted++;
-        }
-        if(s%perc_mstep==0){
-            cout<<"iteration: "<<s<<"/"<<qms::metro_steps<<endl;
-//            save_measures(outfilename);
-        }
-
-        auto t_mid = std::chrono::high_resolution_clock::now();
-        double secs_passed = (1./1000.)*std::chrono::duration<double, std::milli>(t_mid-t_start).count();
-        if((args.walltime>0 and secs_passed>args.walltime) or access( "stop", F_OK ) != -1 ){
-            remove("stop");
-            // save rho and stop
-            
-            FILE * outrho = fopen(rhomat_fname.c_str(),"w");
-
-            fprintf(outrho,"%d\n",iiii);
-            for(int i=0;i<8;++i){
-                for(int j=0;j<8;++j) for(int k=0;k<2;++k){
-                    fprintf(outrho,"%.12lg ",rho_proj[i][j][k]);
-                }
-                fprintf(outrho,"\n");
-            }
-            fclose(outrho);
-
-            printf("Closing due to walltime limit reached\n");
-            break;
-        }
+//        if(ret==1 or ret==2){
+//            count_accepted++;
+//        }
+//        if(s%perc_mstep==0){
+//            cout<<"iteration: "<<s<<"/"<<qms::metro_steps<<endl;
+////            save_measures(outfilename);
+//        }
+//
+//        auto t_mid = std::chrono::high_resolution_clock::now();
+//        double secs_passed = (1./1000.)*std::chrono::duration<double, std::milli>(t_mid-t_start).count();
+//        if((args.walltime>0 and secs_passed>args.walltime) or access( "stop", F_OK ) != -1 ){
+//            remove("stop");
+//            // save rho and stop
+//            
+//	    save_rho(rhomat_fname,rho_proj,iiii);
+//
+//            printf("Closing due to walltime limit reached\n");
+//            break;
+//        }
     }
 
     cout<<endl;
