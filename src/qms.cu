@@ -73,7 +73,17 @@ int main(int argc, char** argv){
     qms::iseed = qms::rangen.get_seed();
 
     qms::syst_qbits = (uint)syst_qbits;
+    qms::ancilla_qbits = (uint)ancilla_qbits;
     qms::nqubits = qms::syst_qbits + qms::ene_qbits + 1;
+    if(qms::ancilla_qbits>1){ // exploits the acceptance register as ancilla qubit
+        qms::nqubits += qms::ancilla_qbits-1;
+        bm_qaux = bmReg(qms::ancilla_qbits);
+        for(uint j=0;j<qms::ancilla_qbits-1; ++j)
+            bm_qaux[j]=qms::syst_qbits+j;
+        bm_qaux[qms::ancilla_qbits-1]=qms::nqubits-1;
+    }else if(qms::ancilla_qbits==1){
+        bm_qaux = {qms::nqubits-1}; 
+    }
     std::cout<<qms::nqubits<<std::endl;
     qms::Dim = (1U << qms::nqubits);
     qms::ene_levels = (1U << qms::ene_qbits);

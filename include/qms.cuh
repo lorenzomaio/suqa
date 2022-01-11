@@ -32,6 +32,7 @@ extern GateCounter gctr_reverse;
 namespace qms{
 
 uint syst_qbits;
+uint ancilla_qbits;
 uint syst_levels;
 uint ene_qbits;
 uint ene_levels;
@@ -71,7 +72,7 @@ double c_factor;
 
 // bitmap
 std::vector<uint> bm_syst;
-//std::vector<uint> bm_enes_old;
+std::vector<uint> bm_extra_ancilla;
 std::vector<uint> bm_enes_new;
 uint bm_acc;
 
@@ -80,11 +81,14 @@ double curr_E_old_d; // stores the current value of the energy measurement at ea
 
 void fill_bitmap(){
     bm_syst.resize(syst_qbits);
+    if(ancilla_qbits>1)
+        bm_extra_ancilla.resize(ancilla_qbits-1);
+    
 //    bm_enes_old.resize(ene_qbits);
     bm_enes_new.resize(ene_qbits);
     uint c=0;
     for(uint i=0; i< syst_qbits; ++i)  bm_syst[i] = c++;
-//    for(uint i=0; i< ene_qbits; ++i)    bm_enes_old[i] = c++;
+    for(uint i=0; i< ancilla_qbits-1; ++i)  bm_extra_ancilla[i] = c++;
     for(uint i=0; i< ene_qbits; ++i)    bm_enes_new[i] = c++;
     bm_acc = c;
 }

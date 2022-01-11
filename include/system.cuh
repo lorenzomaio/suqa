@@ -14,13 +14,13 @@
 //const bmReg bm_qaux   =  {9, 10, 11};
 //const bmReg bm_qlink1 =  {12, 13, 14};
 
-const int syst_qbits = 10;      // number of system's qubits
+const int syst_qbits = 9;      // number of system's qubits
+const int ancilla_qbits = 1;
 const bmReg bm_qlink0 =  {0,  1, 2};
 const bmReg bm_qlink1 =  {3,  4, 5};
 const bmReg bm_qlink2 =  {6,  7, 8};
 const bmReg bm_qlinks[3]={bm_qlink0,bm_qlink1,bm_qlink2};
-const bmReg bm_qaux   =  {9}; 
-//TODO: remove ancillary qubit
+bmReg bm_qaux; // to be allocated afterwards
 
 extern double g_beta;
 
