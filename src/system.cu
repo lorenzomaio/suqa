@@ -16,7 +16,9 @@
 
     representation: ρ_{abc} = (-1)^b [[0,1],[1,0]]^a [[i, 0],[0,-i]]^c
 
-    ρ_{a'b'c'}ρ_{abc} = (-1)^{b'+b} 
+    ρ_{a,b,c}^\dag = ρ{a,b,1-c}
+
+    ρ_{a'b'c'}ρ_{abc} = (-1)^{b'+b} <other>
 
      
           0   1   2   3   4   5   6   7
@@ -43,7 +45,42 @@
 
 
 double g_beta;
+/*
+    <i|T_K|j> = e^{β ReTr[ρ(i)^\dag ρ(j)]} -> 
 
+          0   1   2   3   4   5   6   7                  0   1   2   3   4   5   6   7
+        ________________________________               _______________________________
+       |                                              |                  
+    0  |  0   3   2   1   4   5   6   7            0  |  X+  1   Χ-   1   1   1   1   1
+       |                                              |                  
+    1  |  1   0   3   2   7   4   5   6            1  |  1   X+  1   Χ-   7   1   1   1
+       |                                              |                  
+    2  |  2   1   0   3   6   7   4   5            2  |  Χ-   1   X+  1   1   7   1   1
+       |                                              |                  
+    3  |  3   2   1   0   5   6   7   4    ->      3  |  1   Χ-   1   X+  1   1   7   1
+       |                                              |                  
+    4  |  4   5   6   7   0   1   2   3            4  |  1   1   1   7   X+  1   Χ-   1
+       |                                              |                  
+    5  |  5   6   7   4   1   0   1   2            5  |  1   1   1   1   1   X+  1   Χ-
+       |                                              |                  
+    6  |  6   7   4   5   2   1   0   1            6  |  1   1   1   1   Χ-   1   X+  1
+       |                                              |                  
+    7  |  7   4   5   6   3   2   1   0            7  |  1   1   1   1   1   Χ-   1   X+
+
+    where Χ± = e^{±β}
+
+*/
+
+// <i|T_K|j> = e^{β ReTr[ρ(i)^\dag ρ(j)]} -> 
+// λ_{0,1}=6+2 cosh(2β)
+// λ_{2,3}=2 sinh(2β)-2 = 4 sinh^2(β)
+// λ_{4-7}= 2 sinh(2β)
+// |
+// V  -H_k = log(T_K) - (shift by λ_2)
+// λ'_{0,1}=log((6+2 cosh(2β))/(4 sinh^2(β)))
+// λ'_{2,3}=log((2 sinh(2β))/(4 sinh^2(β)))
+// λ'_{4-7}= 0
+// see Lamm's paper
 __inline__ double f1(double b){
     return log((3+cosh(2.*b))/(2*sinh(b)*sinh(b)));
 }
@@ -234,18 +271,19 @@ void momentum_phase(const bmReg& qr, const uint& qaux, double th1, double th2){
 }
 
 void evolution(const double& t, const int& n){
-    const double dt = t/(double)n;
+    const double dt = -t/(double)n;
 
     const double theta1 = dt*f1(g_beta);    // eigenvalues of kinetic hamiltonian on single gauge variable
     const double theta2 = dt*f2(g_beta);
-    const double theta = 2*dt*g_beta;       // see Lamm's paper (the factor 2 is included here)
+    //FIXME: changed sign here!
+    const double theta = -4*dt*g_beta;       // see Lamm's paper (the factor 2 is included here)
     DEBUG_CALL(printf("Evolution parameters:\ng_beta = %.16lg, dt = %.16lg, thetas: %.16lg %.16lg %.16lg\n", g_beta, dt, theta1, theta2, theta));
 
     for(uint ti=0; ti<(uint)n; ++ti){
         self_plaquette1();
         DEBUG_CALL(printf("after self_plaquette1()\n"));
         DEBUG_READ_STATE();
-        self_trace_operator(bm_qlink1, bm_qaux[0], theta);
+        self_trace_operator(bm_qlink1, bm_qaux[0], theta*0.5);
         DEBUG_CALL(printf("after self_trace_operator()\n"));
         DEBUG_READ_STATE();
         inverse_self_plaquette1();
@@ -255,7 +293,7 @@ void evolution(const double& t, const int& n){
         self_plaquette2();
         DEBUG_CALL(printf("after self_plaquette2()\n"));
         DEBUG_READ_STATE();
-        self_trace_operator(bm_qlink2, bm_qaux[0], theta);
+        self_trace_operator(bm_qlink2, bm_qaux[0], theta*0.5);
         DEBUG_CALL(printf("after self_trace_operator()\n"));
         DEBUG_READ_STATE();
         inverse_self_plaquette2();
@@ -272,7 +310,7 @@ void evolution(const double& t, const int& n){
         DEBUG_CALL(printf("after fourier_transf_d4(bm_qlink2)\n"));
         DEBUG_READ_STATE();
 
-        momentum_phase(bm_qlink0, bm_qaux[0], theta1, theta2);
+        momentum_phase(bm_qlink0, bm_qaux[0], 2*theta1, 2*theta2);
         DEBUG_CALL(printf("after momentum_phase(bm_qlink0, bm_qaux[0], theta1, theta2)\n"));
         DEBUG_READ_STATE();
         momentum_phase(bm_qlink1, bm_qaux[0], theta1, theta2);
@@ -291,6 +329,26 @@ void evolution(const double& t, const int& n){
         DEBUG_READ_STATE();
         inverse_fourier_transf_d4(bm_qlink0);
         DEBUG_CALL(printf("after inverse_fourier_transf_d4(bm_qlink0)\n"));
+        DEBUG_READ_STATE();
+
+        self_plaquette1();
+        DEBUG_CALL(printf("after self_plaquette1()\n"));
+        DEBUG_READ_STATE();
+        self_trace_operator(bm_qlink1, bm_qaux[0], theta*0.5);
+        DEBUG_CALL(printf("after self_trace_operator()\n"));
+        DEBUG_READ_STATE();
+        inverse_self_plaquette1();
+        DEBUG_CALL(printf("after inverse_self_plaquette1()\n"));
+        DEBUG_READ_STATE();
+
+        self_plaquette2();
+        DEBUG_CALL(printf("after self_plaquette2()\n"));
+        DEBUG_READ_STATE();
+        self_trace_operator(bm_qlink2, bm_qaux[0], theta*0.5);
+        DEBUG_CALL(printf("after self_trace_operator()\n"));
+        DEBUG_READ_STATE();
+        inverse_self_plaquette2();
+        DEBUG_CALL(printf("after inverse_self_plaquette2()\n"));
         DEBUG_READ_STATE();
     }
 }
@@ -403,6 +461,7 @@ std::vector<double> C_weightsums(NMoves);
 
 
 void apply_C(const uint &Ci,double rot_angle){
+    return;
     // move 0 -> Ci=0, inverse move 0 -> Ci=9
     bool is_inverse = Ci>=HNMoves;
     double actual_angle = (is_inverse)? -rot_angle : rot_angle;
