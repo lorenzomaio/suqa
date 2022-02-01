@@ -358,7 +358,7 @@ double measure_X(pcg& rgen){
 
 /* Moves facilities */
 
-std::vector<double> C_weigthsums = {1./3, 2./3, 1.0};
+std::vector<double> C_weigthsums = {1./10, 2./10, 3./10, 4./10, 5./10, 6./10, 7./10, 8./10, 9./10, 1.0};
 
 
 void apply_C(const uint &Ci,double rot_angle){
