@@ -48,16 +48,18 @@ void save_measures(string outfilename){
     qms::X_measures.clear();
 }
 
+bmReg bm_qaux(1);
+
 int main(int argc, char** argv){
-    if(argc < 6){
-        printf("usage: %s <beta> <metro steps> <reset each> <num ene qbits> <output file path> [--max-reverse <max reverse attempts> (20)] [--seed <seed> (random)] [--ene-min <min energy> (0.0)] [--ene-max <max energy> (1.0)] [--PE-steps <steps of PE evolution> (10)] [--thermalization <steps> (100)] [--record-reverse]\n", argv[0]);
+    if(argc < 7){
+        printf("usage: %s <beta> <g_beta> <metro steps> <reset each> <num ene qbits> <output file path> [--max-reverse <max reverse attempts> (20)] [--seed <seed> (random)] [--ene-min <min energy> (0.0)] [--ene-max <max energy> (1.0)] [--PE-steps <steps of PE evolution> (10)] [--thermalization <steps> (100)] [--record-reverse]\n", argv[0]);
         exit(1);
     }
 
     parse_arguments(args, argc, argv);
 
     therm_beta = args.beta;
-//    g_beta = args.g_beta; // defined as extern in system.cuh
+    g_beta = args.g_beta; // defined as extern in system.cuh
     thermalization = args.thermalization;
     qms::metro_steps = (uint)args.metro_steps;
     qms::reset_each = (uint)args.reset_each;
@@ -82,6 +84,7 @@ int main(int argc, char** argv){
     qms::t_PE_factor = (qms::ene_levels-1)/(double)(qms::ene_levels*(args.ene_max-args.ene_min)); 
     qms::t_phase_estimation = qms::t_PE_factor*8.*atan(1.0); // 2*pi*t_PE_factor
 
+    bm_qaux[0]=qms::nqubits-1;
     
     // Banner
     suqa::print_banner();
