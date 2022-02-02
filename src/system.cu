@@ -139,11 +139,24 @@ void inverse_self_plaquette1(){
 
 
 void self_plaquette2(){
+    // applies the following operation in the computational basis
+    // |U_3,U_2,U_1,U_0> 
+    //        .
+    //        V
+    // |U_3,U'_1 U_2,U_1,U_0> 
+
     inversion(bm_qlink1);
     left_multiplication(bm_qlink1,bm_qlink2);
     inversion(bm_qlink1);
 }
 void inverse_self_plaquette2(){
+    // applies the following operation in the computational basis
+    // |U_3,U'_1 U_2,U_1,U_0> 
+    //        .
+    //        V
+    // |U_3,U_2,U_1,U_0> 
+
+    left_multiplication(bm_qlink1,bm_qlink2);
 }
 
 void cphases(uint qaux, uint q0b, double alpha1, double alpha2){
@@ -292,6 +305,26 @@ void evolution(const double& t, const int& n){
         inverse_fourier_transf_d4(bm_qlink0);
         DEBUG_CALL(printf("after inverse_fourier_transf_d4(bm_qlink0)\n"));
         DEBUG_READ_STATE();
+//
+//        self_plaquette2();
+//        DEBUG_CALL(printf("after self_plaquette2()\n"));
+//        DEBUG_READ_STATE();
+//        self_trace_operator(bm_qlink2, bm_qaux[0], 0.5*theta);
+//        DEBUG_CALL(printf("after self_trace_operator()\n"));
+//        DEBUG_READ_STATE();
+//        inverse_self_plaquette2();
+//        DEBUG_CALL(printf("after inverse_self_plaquette2()\n"));
+//        DEBUG_READ_STATE();
+//
+//        self_plaquette1();
+//        DEBUG_CALL(printf("after self_plaquette1()\n"));
+//        DEBUG_READ_STATE();
+//        self_trace_operator(bm_qlink1, bm_qaux[0], 0.5*theta);
+//        DEBUG_CALL(printf("after self_trace_operator()\n"));
+//        DEBUG_READ_STATE();
+//        inverse_self_plaquette1();
+//        DEBUG_CALL(printf("after inverse_self_plaquette1()\n"));
+//        DEBUG_READ_STATE();
     }
 }
 
