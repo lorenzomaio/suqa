@@ -414,6 +414,7 @@ int metro_step(bool take_measure){
     suqa::measure_qbit(bm_acc, c_acc, rangen.doub());
 
     if (c_acc == 1U){
+        suqa::apply_x(bm_acc);
         DEBUG_CALL(std::cout<<"accepted"<<std::endl);
         double Enew_meas_d;
         DEBUG_CALL(std::cout<<"Measuring energy new"<<std::endl);
