@@ -354,9 +354,24 @@ int main(int argc, char** argv){
                 double thr_discr=3.0;
 
 //                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
-                printf("%.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
+//                printf("%.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
 
-                if(    (abs(1.0-TrDist_discrepancy_prev/TrDist_discrepancy)<1e-7)
+                { // best res file
+                    string bestres_outfilename="best_systest_"+outfilename+"_b"+to_string(beta_therm)+"_gb"+to_string(g_beta)+"_em"+to_string(args.ene_min)+"_eM"+to_string(args.ene_max)+"_nqe"+to_string(qms::ene_qbits)+"_rt"+to_string(qms::reset_each);
+//                    if( access( outfilename.c_str(), F_OK ) == -1 ){
+//                        FILE * fil = fopen(outfilename.c_str(), "w");
+//                        //        fprintf(fil, "# E%s\n",(Xmatstem!="")?" A":"");
+//                        fprintf(fil, "#beta retherm E_mean E_err E_exact A_mean A_err A_exact TrDist TrDist_err\n");
+//                        fclose(fil);
+//                    }
+                    FILE * fil = fopen(bestres_outfilename.c_str(), "w");
+                    printf("%d %.8lg %.8lg %.8lg %.8lg %d %d %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg\n",iiii, beta_therm, g_beta, args.ene_min, args.ene_max, qms::ene_qbits, qms::reset_each, E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
+                    fprintf(fil,"%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n","iiii", "beta_therm", "g_beta", "args.ene_min", "args.ene_max", "qms::ene_qbits", "qms::reset_each", "E_sng", "E_std", "E_sng_exact", "A_sng", "A_std", "A_sng_exact", "TrDist_ave", "TrDist_fluct", "Energy_discrepancy", "Aoper_discrepancy");
+                    fprintf(fil,"%d %.8lg %.8lg %.8lg %.8lg %d %d %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg\n",iiii, beta_therm, g_beta, args.ene_min, args.ene_max, qms::ene_qbits, qms::reset_each, E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
+                    fclose(fil);
+                }
+
+                if(    (abs(1.0-TrDist_discrepancy_prev/TrDist_discrepancy)<1e-4)
                    and (abs(Energy_discrepancy)>thr_discr or abs(1.0-Energy_discrepancy_prev/Energy_discrepancy)<1e-6)
                    and (abs(Aoper_discrepancy)>thr_discr or abs(1.0-Aoper_discrepancy_prev/Aoper_discrepancy)<1e-6)){
                     printf("Discrepancies converged\n");
