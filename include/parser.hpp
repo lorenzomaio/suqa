@@ -7,6 +7,7 @@
 using namespace std;
 
 struct arg_list{
+    string tag = "default";
     double beta = 0.0;
     double g_beta = 0.0;
     int metro_steps = 0;
@@ -27,6 +28,7 @@ struct arg_list{
 };
 
 ostream& operator<<(ostream& o, const arg_list& al){
+    o<<"tag: "<<al.tag<<endl;
     o<<"beta: "<<al.beta<<endl;
     o<<"g_beta: "<<al.g_beta<<endl;
     o<<"metro steps: "<<al.metro_steps<<endl;
@@ -143,6 +145,15 @@ void parse_arguments(arg_list& args, int argc, char** argv){
        args.walltime = stod(argmap_inv[tmp_idx+1].c_str(), NULL); 
     }
 
+
+    // (string) tag
+    tmp_idx = argmap["--tag"];
+    if(tmp_idx>=fixed_args){
+       if(tmp_idx+1>= argc)
+           throw "ERROR: set value after '--tag' flag"; 
+       
+       args.tag = argmap_inv[tmp_idx+1];
+    }
 
     // argument checking
     if(args.beta <= 0.0){

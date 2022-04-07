@@ -42,6 +42,7 @@ uint suqa::blocks;
 cudaStream_t suqa::stream1, suqa::stream2;
 
 
+string tag;
 // simulation parameters
 double beta;
 double h;
@@ -104,6 +105,7 @@ int main(int argc, char** argv){
 
     parse_arguments(args, argc, argv);
 
+    tag = args.tag;
     beta = args.beta;
     g_beta = args.g_beta; // defined as extern in system.cuh
     thermalization = args.thermalization;
@@ -166,7 +168,7 @@ int main(int argc, char** argv){
     int iiii=0;
     double rho_proj[8][8][2];
     
-    string rhomat_fname="rho_mat_qms_b"+to_string(beta)+"_rt_"+to_string(qms::reset_each)+".txt";
+    string rhomat_fname="rho_mat_qms_"+tag+".txt"; //#_b"+to_string(beta)+"_rt_"+to_string(qms::reset_each)+".txt";
 
     if( access( rhomat_fname.c_str(), F_OK ) != -1 ){
         printf("%s exists\n",rhomat_fname.c_str());
@@ -351,7 +353,8 @@ int main(int argc, char** argv){
 
                 double thr_discr=3.0;
 
-                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
+//                printf("%.8lg+-%.8lg (%.8lg);\t%.8lg+-%.8lg (%.8lg)|%.8lg\t%.8lg\t%.8lg\t%.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
+                printf("%.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
 
                 if(    (abs(1.0-TrDist_discrepancy_prev/TrDist_discrepancy)<1e-7)
                    and (abs(Energy_discrepancy)>thr_discr or abs(1.0-Energy_discrepancy_prev/Energy_discrepancy)<1e-6)
