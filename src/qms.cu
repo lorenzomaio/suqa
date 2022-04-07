@@ -44,7 +44,7 @@ cudaStream_t suqa::stream1, suqa::stream2;
 
 string tag;
 // simulation parameters
-double beta;
+double beta_therm;
 double h;
 int thermalization;
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv){
     parse_arguments(args, argc, argv);
 
     tag = args.tag;
-    beta = args.beta;
+    beta_therm = args.beta;
     g_beta = args.g_beta; // defined as extern in system.cuh
     thermalization = args.thermalization;
     qms::metro_steps = (uint)args.metro_steps;
@@ -123,7 +123,7 @@ int main(int argc, char** argv){
     
     qms::iseed = qms::rangen.get_seed();
 
-    qms::nqubits = qms::state_qbits + 2*qms::ene_qbits + 1;
+    qms::nqubits = qms::state_qbits + qms::ene_qbits + 1;
     qms::Dim = (1U << qms::nqubits);
     qms::ene_levels = (1U << qms::ene_qbits);
     qms::state_levels = (1U << qms::state_qbits);
@@ -145,7 +145,7 @@ int main(int argc, char** argv){
 
     // Initialization of utilities
     suqa::setup(qms::Dim);
-    qms::setup(beta);
+    qms::setup(beta_therm);
 
     // Initialization:
     // known eigenstate of the system (see src/system.cu)
@@ -168,7 +168,7 @@ int main(int argc, char** argv){
     int iiii=0;
     double rho_proj[8][8][2];
     
-    string rhomat_fname="rho_mat_qms_"+tag+".txt"; //#_b"+to_string(beta)+"_rt_"+to_string(qms::reset_each)+".txt";
+    string rhomat_fname="rho_mat_qms_"+tag+".txt"; //#_b"+to_string(beta_therm)+"_rt_"+to_string(qms::reset_each)+".txt";
 
     if( access( rhomat_fname.c_str(), F_OK ) != -1 ){
         printf("%s exists\n",rhomat_fname.c_str());
@@ -199,12 +199,12 @@ int main(int argc, char** argv){
     double Z=0.0;
     double E_sng_exact=0.0,E_sqr_exact;
     for(uint i=0; i<8; ++i){
-        Z+=exp(-beta*eev[i]);
+        Z+=exp(-beta_therm*eev[i]);
     }
     for(uint i=0;i<8;++i){
 //        rho_diff_re[cci]=rho_proj[i][j][0]*rho_proj[i][j][0]/(sampling*sampling);
-        E_sng_exact+=eev[i]*exp(-beta*eev[i])/Z;
-        E_sqr_exact+=eev[i]*eev[i]*exp(-beta*eev[i])/Z;
+        E_sng_exact+=eev[i]*exp(-beta_therm*eev[i])/Z;
+        E_sqr_exact+=eev[i]*eev[i]*exp(-beta_therm*eev[i])/Z;
     }
 
     auto t_prev = std::chrono::high_resolution_clock::now();
@@ -262,7 +262,7 @@ int main(int argc, char** argv){
                         E_sng+=eev[i]*rho_proj[i][j][0]/iiii;
                         E_sqr+=eev[i]*eev[i]*rho_proj[i][j][0]/iiii;
                         
-                        rho_diff[cci]-=exp(-beta*eev[i])/Z;
+                        rho_diff[cci]-=exp(-beta_therm*eev[i])/Z;
                     }
                 //        printf("%.4lg %.4lg %.4lg\n",rho_proj[i][j][0]*rho_proj[i][j][0]/sampling,exp(-qsa::beta*eev[i])/Z, rho_diff_re[cci]);
                     cci++;
@@ -282,7 +282,7 @@ int main(int argc, char** argv){
                             A_sng+=ees[n][k]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik;
 //                            A_sqr+=ees[n][k]*rho_proj[n][m][0]/iiii*ees[m][i]*a_ik*a_ik;
                         }
-                        A_sng_exact+=ees[n][k]*exp(-beta*eev[n])/Z*ees[n][i]*a_ik;
+                        A_sng_exact+=ees[n][k]*exp(-beta_therm*eev[n])/Z*ees[n][i]*a_ik;
                     }
 
                     for(int coeff2=0;coeff2<16;++coeff2){
@@ -369,7 +369,7 @@ int main(int argc, char** argv){
                     }
                     FILE * fil = fopen(outfilename.c_str(), "a");
                     fprintf(fil, "%.8lg\t%2d\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\t%.12lg\n", 
-                            beta, qms::reset_each, E_sng, E_std, E_sng_exact, A_sng, A_std, A_sng_exact, TrDist_ave, TrDist_fluct);
+                            beta_therm, qms::reset_each, E_sng, E_std, E_sng_exact, A_sng, A_std, A_sng_exact, TrDist_ave, TrDist_fluct);
                     fclose(fil);
 
 		    save_rho(rhomat_fname,rho_proj,iiii);
@@ -389,7 +389,7 @@ int main(int argc, char** argv){
         }
         if(s%perc_mstep==0){
             cout<<"iteration: "<<s<<"/"<<qms::metro_steps<<endl;
-//            save_measures(outfilename);
+            save_measures((outfilename+"_meas").c_str());
         }
 
         auto t_mid = std::chrono::high_resolution_clock::now();
