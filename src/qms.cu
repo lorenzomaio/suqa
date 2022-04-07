@@ -357,7 +357,7 @@ int main(int argc, char** argv){
 //                printf("%.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg %.8lg\n",E_sng,E_std,E_sng_exact,A_sng,A_std,A_sng_exact,TrDist_ave,TrDist_fluct,Energy_discrepancy,Aoper_discrepancy);
 
                 { // best res file
-                    string bestres_outfilename="best_systest_"+outfilename+"_b"+to_string(beta_therm)+"_gb"+to_string(g_beta)+"_em"+to_string(args.ene_min)+"_eM"+to_string(args.ene_max)+"_nqe"+to_string(qms::ene_qbits)+"_rt"+to_string(qms::reset_each);
+                    string bestres_outfilename="best_systest_"+outfilename;
 //                    if( access( outfilename.c_str(), F_OK ) == -1 ){
 //                        FILE * fil = fopen(outfilename.c_str(), "w");
 //                        //        fprintf(fil, "# E%s\n",(Xmatstem!="")?" A":"");
