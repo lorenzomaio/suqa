@@ -1,0 +1,2 @@
+iiii beta_therm g_beta args.ene_min args.ene_max qms::ene_qbits qms::reset_each E_sng E_std E_sng_exact A_sng A_std A_sng_exact TrDist_ave TrDist_fluct Energy_discrepancy Aoper_discrepancy
+67917 0.25 0.8 -1.1 3.1 1 6 -0.57789868 0.0047155584 -0.56307291 -0.19507134 0.0037634519 -0.18769097 0.033836828 0.00017176672 -3.1440121 -1.9610634

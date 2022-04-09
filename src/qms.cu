@@ -184,6 +184,7 @@ int main(int argc, char** argv){
         fclose(fil);
         printf("Loading previous rho matrix");
     }else{
+        printf("Initializing rho mat to zero\n");
         for(uint i=0; i<8; ++i)  for(uint j=0; j<8; ++j) for(uint k=0; k<2; ++k) rho_proj[i][j][k]=0.0;
     }
 
