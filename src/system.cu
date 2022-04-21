@@ -503,16 +503,16 @@ void apply_C(const uint &Ci,double rot_angle){
         {
 
             inversion(bm_qlink2);
-            left_multiplication(bm_qlink0, bm_qlink2)
-            left_multiplication(bm_qlink1, bm_qlink2)
+            left_multiplication(bm_qlink0, bm_qlink2);
+            left_multiplication(bm_qlink1, bm_qlink2);
 
             self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
 
             inversion(bm_qlink1);
-            left_multiplication(bm_qlink1, bm_qlink2)
+            left_multiplication(bm_qlink1, bm_qlink2);
             inversion(bm_qlink1);
             inversion(bm_qlink0);
-            left_multiplication(bm_qlink0, bm_qlink2)
+            left_multiplication(bm_qlink0, bm_qlink2);
             inversion(bm_qlink0);
             inversion(bm_qlink2);
 
@@ -523,18 +523,18 @@ void apply_C(const uint &Ci,double rot_angle){
             // rotate using trace of U_2^-1*U_0*U_3*U_1
             
             inversion(bm_qlink2);
-            left_multiplication(bm_qlink0, bm_qlink2)
-            left_multiplication(bm_qlink3, bm_qlink2)
-            left_multiplication(bm_qlink1, bm_qlink2)
+            left_multiplication(bm_qlink0, bm_qlink2);
+            left_multiplication(bm_qlink3, bm_qlink2);
+            left_multiplication(bm_qlink1, bm_qlink2);
 
             self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
 
             inversion(bm_qlink1);
             inversion(bm_qlink3);
             inversion(bm_qlink0);
-            left_multiplication(bm_qlink1, bm_qlink2)
-            left_multiplication(bm_qlink3, bm_qlink2)
-            left_multiplication(bm_qlink0, bm_qlink2)
+            left_multiplication(bm_qlink1, bm_qlink2);
+            left_multiplication(bm_qlink3, bm_qlink2);
+            left_multiplication(bm_qlink0, bm_qlink2);
             inversion(bm_qlink1);
             inversion(bm_qlink3);
             inversion(bm_qlink0);
