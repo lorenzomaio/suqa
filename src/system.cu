@@ -441,83 +441,123 @@ void apply_C(const uint &Ci,double rot_angle){
         }
         case 4: // left plaquette
         {
-            self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
-            self_trace_operator(bm_qlink1, bm_qaux[0], actual_angle);
-            inverse_self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+            // self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+            // self_trace_operator(bm_qlink1, bm_qaux[0], actual_angle);
+            // inverse_self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+
+            inversion(bm_qlink2); 
+            inversion(bm_qlink0); 
+            left_multiplication(bm_qlink0, bm_qlink3); 
+            left_multiplication(bm_qlink2, bm_qlink3);
+            inversion(bm_qlink0); 
+            inversion(bm_qlink2); 
+
+            left_multiplication(bm_qlink3, bm_qlink0);
+            
+            self_trace_operator(bm_qlink0, bm_qaux[0], actual_angle);
+
+            inversion(bm_qlink3); 
+            left_multiplication(bm_qlink3, bm_qlink0);
+            inversion(bm_qlink3); 
+            left_multiplication(bm_qlink2, bm_qlink3);
+            left_multiplication(bm_qlink0, bm_qlink3); 
+
             break;
         }
-        case 5: // rotate using trace of U_1^2
+        case 5: // rotate using trace of U_2^2
         {
             // square in the group:
             // 010 (tr=-1) U_1=001 or 011; 000 (tr=+1) all the other cases 
             // the global phase for all the other cases can be factored out
 
-            suqa::apply_cu1(bm_qlink1[0], bm_qlink1[2], actual_angle, 0U);
+            suqa::apply_cu1(bm_qlink2[0], bm_qlink2[2], actual_angle, 0U);
             break;
             
         }
-        case 6: // rotate using trace of U_1
+        case 6: // rotate using trace of U_2
         {
             
             // applies -rot_angle if 000
-            suqa::apply_x(bm_qlink1[1]);
-            suqa::apply_mcu1({bm_qlink1[0],bm_qlink1[2]}, {0U,0U}, bm_qlink1[1], -actual_angle);
-            suqa::apply_x(bm_qlink1[1]);
+            suqa::apply_x(bm_qlink2[1]);
+            suqa::apply_mcu1({bm_qlink2[0],bm_qlink2[2]}, {0U,0U}, bm_qlink2[1], -actual_angle);
+            suqa::apply_x(bm_qlink2[1]);
 
             //applies rot_angle if 010
-            suqa::apply_mcu1({bm_qlink1[0],bm_qlink1[2]}, {0U,0U}, bm_qlink1[1], actual_angle);
+            suqa::apply_mcu1({bm_qlink2[0],bm_qlink2[2]}, {0U,0U}, bm_qlink2[1], actual_angle);
     
             break;
         }
-        case 7: // rotate using trace of U_3*U_0
+        case 7: // rotate using trace of U_1*U_0
         {
 
-            left_multiplication(bm_qlink3, bm_qlink0);
+            left_multiplication(bm_qlink1, bm_qlink0);
             self_trace_operator(bm_qlink0, bm_qaux[0], actual_angle);
 
-            inversion(bm_qlink3);
-            left_multiplication(bm_qlink3, bm_qlink0);
-            inversion(bm_qlink3);
+            inversion(bm_qlink1);
+            left_multiplication(bm_qlink1, bm_qlink0);
+            inversion(bm_qlink1);
 
             break;
         }
-        case 8: // rotate using trace of U_1^-1*U_0*U_3
+        case 8: // rotate using trace of U_2^-1*U_0*U_1
         {
 
-            left_multiplication(bm_qlink0, bm_qlink3);
-            inversion(bm_qlink1);
-            left_multiplication(bm_qlink1, bm_qlink3);
-            inversion(bm_qlink1);
+            inversion(bm_qlink2);
+            left_multiplication(bm_qlink0, bm_qlink2)
+            left_multiplication(bm_qlink1, bm_qlink2)
 
-            self_trace_operator(bm_qlink3, bm_qaux[0], actual_angle);
+            self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
 
-            left_multiplication(bm_qlink1, bm_qlink3);
+            inversion(bm_qlink1);
+            left_multiplication(bm_qlink1, bm_qlink2)
+            inversion(bm_qlink1);
             inversion(bm_qlink0);
-            left_multiplication(bm_qlink0, bm_qlink3);
+            left_multiplication(bm_qlink0, bm_qlink2)
             inversion(bm_qlink0);
+            inversion(bm_qlink2);
 
             break;
         }
         case 9:
         {
-            // rotate using trace of U_1^-1*U_0*U_2*U_3
+            // rotate using trace of U_2^-1*U_0*U_3*U_1
             
-            left_multiplication(bm_qlink2, bm_qlink3);
-            left_multiplication(bm_qlink0, bm_qlink3);
-            inversion(bm_qlink1);
-            left_multiplication(bm_qlink1, bm_qlink3);
-            inversion(bm_qlink1);
-            self_trace_operator(bm_qlink3, bm_qaux[0], actual_angle);
+            inversion(bm_qlink2);
+            left_multiplication(bm_qlink0, bm_qlink2)
+            left_multiplication(bm_qlink3, bm_qlink2)
+            left_multiplication(bm_qlink1, bm_qlink2)
 
-            left_multiplication(bm_qlink1, bm_qlink3);
+            self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
+
+            inversion(bm_qlink1);
+            inversion(bm_qlink3);
             inversion(bm_qlink0);
-            left_multiplication(bm_qlink0, bm_qlink3);
+            left_multiplication(bm_qlink1, bm_qlink2)
+            left_multiplication(bm_qlink3, bm_qlink2)
+            left_multiplication(bm_qlink0, bm_qlink2)
+            inversion(bm_qlink1);
+            inversion(bm_qlink3);
             inversion(bm_qlink0);
+            
             inversion(bm_qlink2);
-            left_multiplication(bm_qlink2, bm_qlink3);
-            inversion(bm_qlink2);
+
+            // left_multiplication(bm_qlink3, bm_qlink1);
+            // left_multiplication(bm_qlink0, bm_qlink1);
+            // inversion(bm_qlink2);
+            // left_multiplication(bm_qlink2, bm_qlink1);
+            // inversion(bm_qlink2);
+            // self_trace_operator(bm_qlink1, bm_qaux[0], actual_angle);
+
+            // left_multiplication(bm_qlink2, bm_qlink1);
+            // inversion(bm_qlink0);
+            // left_multiplication(bm_qlink0, bm_qlink1);
+            // inversion(bm_qlink0);
+            // inversion(bm_qlink3);
+            // left_multiplication(bm_qlink3, bm_qlink1);
+            // inversion(bm_qlink3);
             break;
         }
+        
         default:
             throw std::runtime_error("ERROR: apply_C() unimplemented!\n");
     }
