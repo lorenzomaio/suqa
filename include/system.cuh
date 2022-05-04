@@ -7,12 +7,12 @@
 #include "suqa.cuh"
 #include "Rand.hpp"
 
-const int syst_qbits = 3;      // number of system's qubits
+const int syst_qbits = 4;      // number of system's qubits
 const bmReg bm_qlink0 =  {0};
 const bmReg bm_qlink1 =  {1};
 const bmReg bm_qlink2 =  {2};
-//const bmReg bm_qlink3 =  {3};
-const bmReg bm_qlinks[syst_qbits]={bm_qlink0,bm_qlink1,bm_qlink2};//,bm_qlink3};
+const bmReg bm_qlink3 =  {3};
+const bmReg bm_qlinks[syst_qbits]={bm_qlink0,bm_qlink1,bm_qlink2,bm_qlink3};
 
 extern double g_beta;
 
@@ -21,7 +21,7 @@ void init_state();
 void evolution(const double& t, const int& n);
 
 //TODO: make it prettier
-#define DEFAULT_THETA 0.01 
+#define DEFAULT_THETA 12./sqrt(2) 
 void apply_C(const uint &Ci, double rot_angle=DEFAULT_THETA);
 void apply_C_inverse(const uint &Ci, double rot_angle=DEFAULT_THETA);
 

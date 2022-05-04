@@ -7,7 +7,7 @@
 
     .   .   .
     1   2
-    o 0 o I .
+    o 0 o 3 .
 
     //TODO: adapt from z2
 //XXX    operation table for the D4 group:
@@ -70,7 +70,7 @@ void init_state(){
 // automatically gauge-invariant initialization
 /*    .   .   .
  *    1   2
- *    o 0 o I .
+ *    o 0 o 3 .
  *   g1  g2
  *  
  *  U0 -> g2 U0 g1' -> g
@@ -214,11 +214,11 @@ void evolution(const double& t, const int& n){
         fourier_transf_z2(bm_qlink2);
         DEBUG_CALL(printf("after fourier_transf_z2(bm_qlink2)\n"));
         DEBUG_READ_STATE();
-        // fourier_transf_z2(bm_qlink3);
-        // DEBUG_CALL(printf("after fourier_transf_z2(bm_qlink3)\n"));
-        // DEBUG_READ_STATE();
+        fourier_transf_z2(bm_qlink3);
+        DEBUG_CALL(printf("after fourier_transf_z2(bm_qlink3)\n"));
+        DEBUG_READ_STATE();
 
-        momentum_phase(bm_qlink0, 2*theta1, 2*theta2);
+        momentum_phase(bm_qlink0, theta1, theta2);
         DEBUG_CALL(printf("after momentum_phase(bm_qlink0, theta1, theta2)\n"));
         DEBUG_READ_STATE();
         momentum_phase(bm_qlink1, theta1, theta2);
@@ -227,14 +227,14 @@ void evolution(const double& t, const int& n){
         momentum_phase(bm_qlink2, theta1, theta2);
         DEBUG_CALL(printf("after momentum_phase(bm_qlink2, theta1, theta2)\n"));
         DEBUG_READ_STATE();
-        // momentum_phase(bm_qlink3, theta1, theta2);
-        // DEBUG_CALL(printf("after momentum_phase(bm_qlink3, theta1, theta2)\n"));
-        // DEBUG_READ_STATE();
+        momentum_phase(bm_qlink3, theta1, theta2);
+        DEBUG_CALL(printf("after momentum_phase(bm_qlink3, theta1, theta2)\n"));
+        DEBUG_READ_STATE();
 	
 
-        // inverse_fourier_transf_z2(bm_qlink3);
-        // DEBUG_CALL(printf("after inverse_fourier_transf_z2(bm_qlink3)\n"));
-        // DEBUG_READ_STATE();
+        inverse_fourier_transf_z2(bm_qlink3);
+        DEBUG_CALL(printf("after inverse_fourier_transf_z2(bm_qlink3)\n"));
+        DEBUG_READ_STATE();
         inverse_fourier_transf_z2(bm_qlink2);
         DEBUG_CALL(printf("after inverse_fourier_transf_z2(bm_qlink2)\n"));
         DEBUG_READ_STATE();
@@ -369,7 +369,7 @@ double measure_X(pcg& rgen){
 #define NMoves 9
 
 //std::vector<double> C_weightsums(NMoves);
-std::vector<double> C_weightsums = {1./9, 2./9, 3./9, 4./9, 5./9, 6./9, 7./9, 8./9, 1.};
+std::vector<double> C_weightsums = {1./3, 2./3, 1.};
 //#define HNMoves (NMoves>>1)
 
 
@@ -377,81 +377,31 @@ void apply_C(const uint &Ci, double rot_angle){
 (void)rot_angle;
   switch(Ci){
   case 0U:
-    suqa::apply_z(bm_qlink1[0]);
-    DEBUG_CALL(printf("after apply_z(bm_qlink1[0])\n"));
-    DEBUG_READ_STATE();
+
+    fourier_transf_z2(bm_qlink0);
+    momentum_phase(bm_qlink0, theta1, theta2);
+    inverse_fourier_transf_z2(bm_qlink0);
+
     break;
   case 1U:
-    suqa::apply_z(bm_qlink2[0]);
-    DEBUG_CALL(printf("after apply_z(bm_qlink2[0])\n"));
-    DEBUG_READ_STATE();
+
+    left_multiplication(bm_qlink0, bm_qlink3);
+    self_trace_operator(bm_qlink3, DEFAULT_THETA);
+    left_multiplication(bm_qlink0, bm_qlink3);
+
     break;
   case 2U:
-    suqa::apply_z(bm_qlink0[0]);
-    DEBUG_CALL(printf("after apply_z(bm_qlink0[0])\n"));
-   DEBUG_READ_STATE();
-    // suqa::apply_z(bm_qlink3[0]);
-    // DEBUG_CALL(printf("after apply_z(bm_qlink3[0])\n"));
-    // DEBUG_READ_STATE();
+
+    self_trace_operator(bm_qlink1, DEFAULT_THETA);
+
     break;
-  case 3U:
-    suqa::apply_y(bm_qlink0[0]);
-    DEBUG_CALL(printf("after apply_y(bm_qlink0[0])\n"));
-    DEBUG_READ_STATE();
-   // suqa::apply_y(bm_qlink3[0]);
-    // DEBUG_CALL(printf("after apply_y(bm_qlink3[0])\n"));
-    // DEBUG_READ_STATE();
-   break;
-  case 4U:
-    suqa::apply_y(bm_qlink1[0]);
-    DEBUG_CALL(printf("after apply_y(bm_qlink1[0])\n"));
-    DEBUG_READ_STATE();
-    break;
-  case 5U:
-    suqa::apply_y(bm_qlink2[0]);
-    DEBUG_CALL(printf("after apply_y(bm_qlink2[0])\n"));
-   DEBUG_READ_STATE();
-    break;
-  case 6U:
-    suqa::apply_x(bm_qlink0[0]);
-    DEBUG_CALL(printf("after apply_y(bm_qlink0[0])\n"));
-    DEBUG_READ_STATE();
-    // suqa::apply_y(bm_qlink3[0]);
-    // DEBUG_CALL(printf("after apply_y(bm_qlink3[0])\n"));
-    // DEBUG_READ_STATE();
-    break;
-  case 7U:
-    suqa::apply_x(bm_qlink1[0]);
-    DEBUG_CALL(printf("after apply_y(bm_qlink1[0])\n"));
-    DEBUG_READ_STATE();
-    break;
-  case 8U:
-    suqa::apply_x(bm_qlink2[0]);
-    DEBUG_CALL(printf("after apply_y(bm_qlink2[0])\n"));
-    DEBUG_READ_STATE();
-    break;
-//   case 9U:
-//     suqa::apply_h(bm_qlink0[0]);
-//     DEBUG_CALL(printf("after apply_y(bm_qlink2[0])\n"));
-//    DEBUG_READ_STATE();
-//     break;
-//   case 10U:
-//     suqa::apply_h(bm_qlink1[0]);
-//     DEBUG_CALL(printf("after apply_y(bm_qlink2[0])\n"));
-//     DEBUG_READ_STATE();
-//     break;
-//   case 11U:
-//     suqa::apply_h(bm_qlink2[0]);
-//     DEBUG_CALL(printf("after apply_y(bm_qlink2[0])\n"));
-//     DEBUG_READ_STATE();
-//     break;
     
   default:
     throw std::runtime_error("ERROR: wrong move selection");
   }
 }
 void apply_C_inverse(const uint &Ci,double rot_angle){
-  apply_C(Ci,rot_angle);
+  apply_C(Ci,-rot_angle);
 }
 
 
