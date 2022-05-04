@@ -205,6 +205,16 @@ void evolution(const double& t, const int& n){
         DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
         DEBUG_READ_STATE();
 
+        self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        DEBUG_CALL(printf("after self_plaquette()\n"));
+        DEBUG_READ_STATE();
+        self_trace_operator(bm_qlink2, theta*0.5);
+        DEBUG_CALL(printf("after self_trace_operator()\n"));
+        DEBUG_READ_STATE();
+        inverse_self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
+        DEBUG_READ_STATE();
+
         fourier_transf_z2(bm_qlink0);
         DEBUG_CALL(printf("after fourier_transf_z2(bm_qlink0)\n"));
         DEBUG_READ_STATE();
@@ -252,6 +262,16 @@ void evolution(const double& t, const int& n){
         DEBUG_CALL(printf("after self_trace_operator()\n"));
         DEBUG_READ_STATE();
         inverse_self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+        DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
+        DEBUG_READ_STATE();
+
+        self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        DEBUG_CALL(printf("after self_plaquette()\n"));
+        DEBUG_READ_STATE();
+        self_trace_operator(bm_qlink2, theta*0.5);
+        DEBUG_CALL(printf("after self_trace_operator()\n"));
+        DEBUG_READ_STATE();
+        inverse_self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
         DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
         DEBUG_READ_STATE();
 //
@@ -375,8 +395,11 @@ std::vector<double> C_weightsums = {1./3, 2./3, 1.};
 
 void apply_C(const uint &Ci, double rot_angle){
 (void)rot_angle;
+double actual_angle = (is_inverse)? -rot_angle : rot_angle;
   switch(Ci){
   case 0U:
+    const double theta1 = actual_angle*fp(g_beta);    
+    const double theta2 = actual_angle*fm(g_beta);
 
     fourier_transf_z2(bm_qlink0);
     momentum_phase(bm_qlink0, theta1, theta2);
