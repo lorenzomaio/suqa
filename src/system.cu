@@ -59,6 +59,8 @@ void init_state(){
     suqa::apply_h(bm_qlink0[0]);
     suqa::apply_h(bm_qlink1[0]);
     suqa::apply_h(bm_qlink2[0]);
+    suqa::apply_h(bm_qlink3[0]);
+
 //    suqa::apply_h(bm_qlink0[0]);
 //    suqa::apply_cx(bm_qlink0[0], bm_qlink3[0]);
 //    suqa::apply_h(bm_qlink0[1]);
@@ -402,19 +404,19 @@ void apply_C(const uint &Ci, double rot_angle){
     switch(Ci){
         case 0:
         {
-            //const double theta1 = rot_angle*fp(g_beta);    
-            //const double theta2 = rot_angle*fm(g_beta);
+            const double theta1 = rot_angle*fp(g_beta);    
+            const double theta2 = rot_angle*fm(g_beta);
 
-            //fourier_transf_z2(bm_qlink0);
-            //momentum_phase(bm_qlink0, theta1, theta2);
-            //inverse_fourier_transf_z2(bm_qlink0);
-            //break;
+            fourier_transf_z2(bm_qlink0);
+            momentum_phase(bm_qlink0, theta1, theta2);
+            inverse_fourier_transf_z2(bm_qlink0);
+            break;
 
-            left_multiplication(bm_qlink0, bm_qlink3);
-            left_multiplication(bm_qlink1, bm_qlink3);
-            self_trace_operator(bm_qlink3, rot_angle);
-            left_multiplication(bm_qlink1, bm_qlink3);
-            left_multiplication(bm_qlink0, bm_qlink3);
+            //left_multiplication(bm_qlink0, bm_qlink3);
+            //left_multiplication(bm_qlink1, bm_qlink3);
+            //self_trace_operator(bm_qlink3, rot_angle);
+            //left_multiplication(bm_qlink1, bm_qlink3);
+            //left_multiplication(bm_qlink0, bm_qlink3);
             break;
         }
         case 1:
