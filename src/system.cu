@@ -190,7 +190,7 @@ void evolution(const double& t, const int& n){
 
     const double theta1 = dt*fp(g_beta);
     const double theta2 = dt*fm(g_beta);
-    const double theta = 4*dt*g_beta;
+    const double theta = 2*dt*g_beta;
 
     DEBUG_CALL(if(n>0) printf("g_beta = %.16lg, dt = %.16lg, thetas: %.16lg %.16lg\n", g_beta, dt, theta1, theta));
 
@@ -255,6 +255,16 @@ void evolution(const double& t, const int& n){
         DEBUG_CALL(printf("after inverse_fourier_transf_z2(bm_qlink0)\n"));
         DEBUG_READ_STATE();
 
+        self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        DEBUG_CALL(printf("after self_plaquette()\n"));
+        DEBUG_READ_STATE();
+        self_trace_operator(bm_qlink2, theta*0.5);
+        DEBUG_CALL(printf("after self_trace_operator()\n"));
+        DEBUG_READ_STATE();
+        inverse_self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
+        DEBUG_READ_STATE();
+
         self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
         DEBUG_CALL(printf("after self_plaquette()\n"));
         DEBUG_READ_STATE();
@@ -265,15 +275,7 @@ void evolution(const double& t, const int& n){
         DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
         DEBUG_READ_STATE();
 
-        self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
-        DEBUG_CALL(printf("after self_plaquette()\n"));
-        DEBUG_READ_STATE();
-        self_trace_operator(bm_qlink2, theta*0.5);
-        DEBUG_CALL(printf("after self_trace_operator()\n"));
-        DEBUG_READ_STATE();
-        inverse_self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
-        DEBUG_CALL(printf("after inverse_self_plaquette()\n"));
-        DEBUG_READ_STATE();
+        
 //
 //      TODO: merge V^{1/2} between different iterations
 //        if(ti==(uint)(n-1)){
@@ -386,7 +388,7 @@ double measure_X(pcg& rgen){
 }
 
 /* Moves facilities */
-#define NMoves 9
+#define NMoves 6
 
 //std::vector<double> C_weightsums(NMoves);
 std::vector<double> C_weightsums = {1./3, 2./3, 1.};
@@ -394,34 +396,43 @@ std::vector<double> C_weightsums = {1./3, 2./3, 1.};
 
 
 void apply_C(const uint &Ci, double rot_angle){
-(void)rot_angle;
-double actual_angle = (is_inverse)? -rot_angle : rot_angle;
-  switch(Ci){
-  case 0U:
-    const double theta1 = actual_angle*fp(g_beta);    
-    const double theta2 = actual_angle*fm(g_beta);
 
-    fourier_transf_z2(bm_qlink0);
-    momentum_phase(bm_qlink0, theta1, theta2);
-    inverse_fourier_transf_z2(bm_qlink0);
+    //bool is_inverse = Ci>=HNMoves;
+    //double actual_angle = (is_inverse)? -rot_angle : rot_angle;
+    switch(Ci){
+        case 0:
+        {
+            //const double theta1 = rot_angle*fp(g_beta);    
+            //const double theta2 = rot_angle*fm(g_beta);
 
-    break;
-  case 1U:
+            //fourier_transf_z2(bm_qlink0);
+            //momentum_phase(bm_qlink0, theta1, theta2);
+            //inverse_fourier_transf_z2(bm_qlink0);
+            //break;
 
-    left_multiplication(bm_qlink0, bm_qlink3);
-    self_trace_operator(bm_qlink3, DEFAULT_THETA);
-    left_multiplication(bm_qlink0, bm_qlink3);
+            left_multiplication(bm_qlink0, bm_qlink3);
+            left_multiplication(bm_qlink1, bm_qlink3);
+            self_trace_operator(bm_qlink3, rot_angle);
+            left_multiplication(bm_qlink1, bm_qlink3);
+            left_multiplication(bm_qlink0, bm_qlink3);
+            break;
+        }
+        case 1:
+        {
+            left_multiplication(bm_qlink0, bm_qlink3);
+            self_trace_operator(bm_qlink3, rot_angle);
+            left_multiplication(bm_qlink0, bm_qlink3);
+            break;
+        }
+        case 2:
+        {
+            self_trace_operator(bm_qlink1, rot_angle);
 
-    break;
-  case 2U:
-
-    self_trace_operator(bm_qlink1, DEFAULT_THETA);
-
-    break;
-    
-  default:
-    throw std::runtime_error("ERROR: wrong move selection");
-  }
+            break;
+        }
+        default:
+            throw std::runtime_error("ERROR: wrong move selection");
+    }
 }
 void apply_C_inverse(const uint &Ci,double rot_angle){
   apply_C(Ci,-rot_angle);
