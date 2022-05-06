@@ -426,9 +426,9 @@ double measure_X(pcg& rgen){
 /* Moves facilities */
 #define NMoves 10
 
-std::vector<double> C_weightsums(NMoves);
+//std::vector<double> C_weightsums(NMoves);
 
-= {1./10., 2./10., 3./10., 4./10., 5./10., 
+std::vector<double> C_weightsums = {1./10., 2./10., 3./10., 4./10., 5./10., 
     6./10., 7./10., 8./10., 9./10., 1.0};
 //#define HNMoves (NMoves>>1)
 
