@@ -393,7 +393,7 @@ double measure_X(pcg& rgen){
 //#define NMoves 6
 
 //std::vector<double> C_weightsums(NMoves);
-std::vector<double> C_weightsums = {1./6, 2./6, 3./6, 4./6, 5./6, 1.};
+std::vector<double> C_weightsums = {1./4, 2./4, 3./4, 1.};
 //#define HNMoves (NMoves>>1)
 
 
@@ -411,13 +411,7 @@ void apply_C(const uint &Ci, double rot_angle){
             momentum_phase(bm_qlink0, theta1, theta2);
             inverse_fourier_transf_z2(bm_qlink0);
             break;
-
-            //left_multiplication(bm_qlink0, bm_qlink3);
-            //left_multiplication(bm_qlink1, bm_qlink3);
-            //self_trace_operator(bm_qlink3, rot_angle);
-            //left_multiplication(bm_qlink1, bm_qlink3);
-            //left_multiplication(bm_qlink0, bm_qlink3);
-            break;
+          
         }
         case 1:
         {
@@ -434,34 +428,15 @@ void apply_C(const uint &Ci, double rot_angle){
         }
         case 3:
         {
-            const double theta1 = -rot_angle*fp(g_beta);    
-            const double theta2 = -rot_angle*fm(g_beta);
 
-            fourier_transf_z2(bm_qlink0);
-            momentum_phase(bm_qlink0, theta1, theta2);
-            inverse_fourier_transf_z2(bm_qlink0);
-            break;
-
-            //left_multiplication(bm_qlink0, bm_qlink3);
-            //left_multiplication(bm_qlink1, bm_qlink3);
-            //self_trace_operator(bm_qlink3, rot_angle);
-            //left_multiplication(bm_qlink1, bm_qlink3);
-            //left_multiplication(bm_qlink0, bm_qlink3);
-            break;
-        }
-        case 4:
-        {
             left_multiplication(bm_qlink0, bm_qlink3);
-            self_trace_operator(bm_qlink3, -rot_angle);
+            left_multiplication(bm_qlink1, bm_qlink3);
+            self_trace_operator(bm_qlink3, rot_angle);
+            left_multiplication(bm_qlink1, bm_qlink3);
             left_multiplication(bm_qlink0, bm_qlink3);
             break;
         }
-        case 5:
-        {
-            self_trace_operator(bm_qlink1, -rot_angle);
-
-            break;
-        }
+        
         default:
             throw std::runtime_error("ERROR: wrong move selection");
     }
