@@ -447,9 +447,9 @@ void apply_C(const uint &Ci,double rot_angle){
             const double theta1 = actual_angle*f1(g_beta);    
             const double theta2 = actual_angle*f2(g_beta);
             DEBUG_CALL(printf("actual_angle = %lg; g_beta = %lg; f1 = %lg; f2 = %lg\n",actual_angle,g_beta,f1(g_beta), f2(g_beta)));
-            fourier_transf_d4(bm_qlinks[Ci%HNMoves]);
-            momentum_phase(bm_qlinks[Ci%HNMoves], bm_qaux[0], theta1, theta2);
-            inverse_fourier_transf_d4(bm_qlinks[Ci%HNMoves]);
+            fourier_transf_d4(bm_qlinks[Ci]);
+            momentum_phase(bm_qlinks[Ci], bm_qaux[0], theta1, theta2);
+            inverse_fourier_transf_d4(bm_qlinks[Ci]);
             break;
         }
         case 4: // left plaquette
