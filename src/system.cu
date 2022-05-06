@@ -7,8 +7,8 @@
     +1 ancillary qubit
 
     .   .   .
-    1   2
-    o 0 o 3 .
+    2   3
+    o 0 o 1 .
 
     operation table for the D4 group:
 
@@ -56,12 +56,25 @@ void init_state(){
     suqa::init_state();
 
     suqa::apply_h(bm_qlink0[0]);
-    suqa::apply_cx(bm_qlink0[0], bm_qlink3[0]);
     suqa::apply_h(bm_qlink0[1]);
-    suqa::apply_cx(bm_qlink0[1], bm_qlink3[1]);
     suqa::apply_h(bm_qlink0[2]);
-    suqa::apply_cx(bm_qlink0[2], bm_qlink3[2]);
-    suqa::apply_mcx({bm_qlink3[0], bm_qlink3[2]}, {0U,1U}, bm_qlink3[1]);
+    suqa::apply_h(bm_qlink1[0]);
+    suqa::apply_h(bm_qlink1[1]);
+    suqa::apply_h(bm_qlink1[2]);
+    suqa::apply_h(bm_qlink2[0]);
+    suqa::apply_h(bm_qlink2[1]);
+    suqa::apply_h(bm_qlink2[2]);
+    suqa::apply_h(bm_qlink3[0]);
+    suqa::apply_h(bm_qlink3[1]);
+    suqa::apply_h(bm_qlink3[2]);
+    
+//    suqa::apply_h(bm_qlink0[0]);
+//    suqa::apply_cx(bm_qlink0[0], bm_qlink3[0]);
+//    suqa::apply_h(bm_qlink0[1]);
+//    suqa::apply_cx(bm_qlink0[1], bm_qlink3[1]);
+//    suqa::apply_h(bm_qlink0[2]);
+//    suqa::apply_cx(bm_qlink0[2], bm_qlink3[2]);
+//    suqa::apply_mcx({bm_qlink3[0], bm_qlink3[2]}, {0U,1U}, bm_qlink3[1]);
 
 // automatically gauge-invariant initialization
 /*    .   .   .
@@ -411,21 +424,21 @@ double measure_X(pcg& rgen){
 }
 
 /* Moves facilities */
-#define NMoves 20
+#define NMoves 10
 
 std::vector<double> C_weightsums(NMoves);
-//
-//= {1./18., 2./18., 3./18., 4./18., 5./18., 
-//    6./18., 7./18., 8./18., 9./18., 10./18., 11./18., 12./18., 
-//    13./18., 14./18., 15./18., 16./18., 17./18., 1.0};
-#define HNMoves (NMoves>>1)
+
+= {1./10., 2./10., 3./10., 4./10., 5./10., 
+    6./10., 7./10., 8./10., 9./10., 1.0};
+//#define HNMoves (NMoves>>1)
 
 
 void apply_C(const uint &Ci,double rot_angle){
     // move 0 -> Ci=0, inverse move 0 -> Ci=9
-    bool is_inverse = Ci>=HNMoves;
-    double actual_angle = (is_inverse)? -rot_angle : rot_angle;
-    switch (Ci%HNMoves){
+    //bool is_inverse = Ci>=HNMoves;
+    //double actual_angle = (is_inverse)? -rot_angle : rot_angle;
+    double actual_angle = rot_angle;
+    switch (Ci){
         case 0:
         case 1:
         case 2:
@@ -503,17 +516,17 @@ void apply_C(const uint &Ci,double rot_angle){
         {
 
             inversion(bm_qlink2);
-            left_multiplication(bm_qlink0, bm_qlink2);
             left_multiplication(bm_qlink1, bm_qlink2);
+            left_multiplication(bm_qlink0, bm_qlink2);
 
             self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
 
-            inversion(bm_qlink1);
-            left_multiplication(bm_qlink1, bm_qlink2);
-            inversion(bm_qlink1);
             inversion(bm_qlink0);
             left_multiplication(bm_qlink0, bm_qlink2);
             inversion(bm_qlink0);
+            inversion(bm_qlink1);
+            left_multiplication(bm_qlink1, bm_qlink2);
+            inversion(bm_qlink1);
             inversion(bm_qlink2);
 
             break;
@@ -523,21 +536,21 @@ void apply_C(const uint &Ci,double rot_angle){
             // rotate using trace of U_2^-1*U_0*U_3*U_1
             
             inversion(bm_qlink2);
-            left_multiplication(bm_qlink0, bm_qlink2);
-            left_multiplication(bm_qlink3, bm_qlink2);
             left_multiplication(bm_qlink1, bm_qlink2);
+            left_multiplication(bm_qlink3, bm_qlink2);
+            left_multiplication(bm_qlink0, bm_qlink2);
 
             self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
 
-            inversion(bm_qlink1);
-            inversion(bm_qlink3);
             inversion(bm_qlink0);
-            left_multiplication(bm_qlink1, bm_qlink2);
-            left_multiplication(bm_qlink3, bm_qlink2);
+            inversion(bm_qlink3);
+            inversion(bm_qlink1);
             left_multiplication(bm_qlink0, bm_qlink2);
-            inversion(bm_qlink1);
-            inversion(bm_qlink3);
+            left_multiplication(bm_qlink3, bm_qlink2);
+            left_multiplication(bm_qlink1, bm_qlink2);
             inversion(bm_qlink0);
+            inversion(bm_qlink3);
+            inversion(bm_qlink1);
             
             inversion(bm_qlink2);
 
@@ -593,14 +606,16 @@ void qsa_apply_C_inverse(const uint &Ci){
 //  suqa::apply_h(bm_spin_tilde[Ci]);
 }
 
-std::vector<double> get_C_weightsums(){ 
-    static bool init_done=false;
+std::vector<double> get_C_weightsums(){ return C_weightsums; }
+
+// std::vector<double> get_C_weightsums(){ 
+//    static bool init_done=false;
     // first initialization
-    if(not init_done){
-        for(int i=1; i<=NMoves; ++i){
-            C_weightsums[i-1]=i/(double)NMoves;
-        }
-        init_done=true;
-    }
-    return C_weightsums; }
+//    if(not init_done){
+//        for(int i=1; i<=NMoves; ++i){
+//            C_weightsums[i-1]=i/(double)NMoves;
+//        }
+//        init_done=true;
+//    }
+//    return C_weightsums; }
 
