@@ -493,7 +493,7 @@ int metro_step(bool take_measure){
         apply_Phi_inverse();
         
         //if(curr_E_old == Enew_meas){
-        if(fabs(curr_E_old - Enew_meas) < 10*bin_size ){
+        if(fabs(curr_E_old - Enew_meas) <= 1*bin_size ){
             DEBUG_CALL(std::cout<<"  accepted restoration ("<<max_reverse_attempts-iters<<"/"<<max_reverse_attempts<<")"<<std::endl); 
             if(take_measure){
                 E_measures.push_back(curr_E_old_d);
