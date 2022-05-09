@@ -83,7 +83,8 @@ int main(int argc, char** argv){
     qms::t_PE_factor = (qms::ene_levels-1)/(double)(qms::ene_levels*(args.ene_max-args.ene_min)); 
     qms::t_phase_estimation = qms::t_PE_factor*8.*atan(1.0); // 2*pi*t_PE_factor
 
-    
+    qms::bin_size = (args.ene_max-args.ene_min)/(qms::ene_levels-1);
+
     // Banner
     suqa::print_banner();
     cout<<"arguments:\n"<<args<<endl;
