@@ -49,7 +49,8 @@ int n_phase_estimation;
 uint gCi;
 uint c_acc = 0;
 
-double bin_size;
+uint ene_threshold;
+//double bin_size;
 
 bool record_reverse=false;
 std::vector<uint> reverse_counters;
@@ -493,7 +494,13 @@ int metro_step(bool take_measure){
         apply_Phi_inverse();
         
         //if(curr_E_old == Enew_meas){
-        if(fabs(curr_E_old - Enew_meas) <= 1*bin_size ){
+        //if(fabs(curr_E_old - Enew_meas) <= 1*bin_size ){
+        double en_d = t_PE_shift+(Enew_meas)/(double)(t_PE_factor*ene_levels); 
+        double eo_d = t_PE_shift+(curr_E_old)/(double)(t_PE_factor*ene_levels);
+        double de_th = 1.0/(t_PE_factor) * (1.0 - 1.0/(double)(ene_levels));
+        de_th = ((double) qms::ene_threshold)  * de_th / ((double)(ene_levels));
+        //min_delta = std::abs(en_d-eo_d) < min_delta ? std::abs(en_d-eo_d) : min_delta;
+        if(std::abs(en_d-eo_d) < de_th){
             DEBUG_CALL(std::cout<<"  accepted restoration ("<<max_reverse_attempts-iters<<"/"<<max_reverse_attempts<<")"<<std::endl); 
             if(take_measure){
                 E_measures.push_back(curr_E_old_d);
