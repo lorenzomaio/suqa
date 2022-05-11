@@ -393,7 +393,7 @@ double measure_X(pcg& rgen){
 //#define NMoves 6
 
 //std::vector<double> C_weightsums(NMoves);
-std::vector<double> C_weightsums = {1./4, 2./4, 3./4, 1.};
+std::vector<double> C_weightsums = {1./5, 2./5, 3./5, 4./5, 1};
 //#define HNMoves (NMoves>>1)
 
 
@@ -435,6 +435,16 @@ void apply_C(const uint &Ci, double rot_angle){
             left_multiplication(bm_qlink1, bm_qlink3);
             left_multiplication(bm_qlink0, bm_qlink3);
             break;
+        }
+        case 4:
+        {
+            const double theta1 = rot_angle*fp(g_beta);    
+            const double theta2 = rot_angle*fm(g_beta);
+
+            fourier_transf_z2(bm_qlink3);
+            momentum_phase(bm_qlink3, theta1, theta2);
+            inverse_fourier_transf_z2(bm_qlink3);
+            break;          
         }
         
         default:
