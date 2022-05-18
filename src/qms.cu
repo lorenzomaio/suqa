@@ -41,11 +41,12 @@ GateCounter gctr_reverse("reverse");
 void save_measures(string outfilename){
     FILE * fil = fopen(outfilename.c_str(), "a");
     for(uint ei = 0; ei < qms::E_measures.size(); ++ei){
-        fprintf(fil, "%.16lg %.16lg\n", qms::E_measures[ei], qms::X_measures[ei]);
+        //fprintf(fil, "%.16lg %.16lg\n", qms::E_measures[ei], qms::X_measures[ei]);
+        fprintf(fil, "%.16lg\n", qms::E_measures[ei]);
     }
     fclose(fil);
     qms::E_measures.clear();
-    qms::X_measures.clear();
+    //qms::X_measures.clear();
 }
 
 int main(int argc, char** argv){

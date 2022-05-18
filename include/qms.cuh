@@ -58,7 +58,7 @@ std::vector<uint> reverse_counters;
 pcg rangen;
 
 ////vector<double> energy_measures;
-std::vector<double> X_measures;
+//std::vector<double> X_measures;
 std::vector<double> E_measures;
 
 //std::vector<double> rphase_m;
@@ -440,7 +440,7 @@ int metro_step(bool take_measure){
 //                suqa::apply_reset(bm_enes_new[ei],rangen.doub());
                 if(c_E_news[ei]) suqa::apply_x(bm_enes_new[ei]);
             }
-            X_measures.push_back(measure_X(rangen));
+            //X_measures.push_back(measure_X(rangen));
             DEBUG_CALL(std::cout<<"  X measure : "<<X_measures.back()<<std::endl); 
             DEBUG_CALL(std::cout<<"\n\nAfter X measure"<<std::endl);
             DEBUG_READ_STATE();
@@ -511,7 +511,7 @@ int metro_step(bool take_measure){
                 for(uint ei=0U; ei<ene_qbits; ++ei)
                     suqa::apply_reset(bm_enes_new[ei],rangen.doub());
 
-                X_measures.push_back(measure_X(rangen));
+                //X_measures.push_back(measure_X(rangen));
                 DEBUG_CALL(std::cout<<"\n\nAfter X measure"<<std::endl);
                 DEBUG_READ_STATE();
                 DEBUG_CALL(std::cout<<"  X measure : "<<X_measures.back()<<std::endl); 
