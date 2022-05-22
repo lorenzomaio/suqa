@@ -97,13 +97,13 @@ int main(int argc, char** argv){
         evolution(t, ii);
         DEBUG_CALL(printf("after evolution by t=%lg:\n",t));
         DEBUG_READ_STATE();
-        self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+        self_plaquette(bm_qlink3, bm_qlink0, bm_qlink2, bm_qlink0);
 
         //suqa::apply_h(state,  bm_spin[rangen.randint(0,3)]);
 	
         double p000, p010;
-        suqa::prob_filter(bm_qlink1, {0U,0U,0U}, p000);
-        suqa::prob_filter(bm_qlink1, {0U,1U,0U}, p010);
+        suqa::prob_filter(bm_qlink3, {0U,0U,0U}, p000);
+        suqa::prob_filter(bm_qlink3, {0U,1U,0U}, p010);
         printf("p000 = %.12lg; p010 = %.12lg\n", p000, p010);
         plaq_val = 2.0*(p000-p010);
         plaq_val_std = sqrt(4.0*(p000+p010)-plaq_val*plaq_val);

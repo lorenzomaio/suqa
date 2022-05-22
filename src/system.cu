@@ -53,6 +53,16 @@ __inline__ double f2(double b){
 }
 
 void init_state(){
+    //suqa::init_state();
+
+    //suqa::apply_h(bm_qlink0[0]);
+    //suqa::apply_cx(bm_qlink0[0], bm_qlink1[0]);
+    //suqa::apply_h(bm_qlink0[1]);
+    //suqa::apply_cx(bm_qlink0[1], bm_qlink1[1]);
+    //suqa::apply_h(bm_qlink0[2]);
+    //suqa::apply_cx(bm_qlink0[2], bm_qlink1[2]);
+    //suqa::apply_mcx({bm_qlink1[0], bm_qlink1[2]}, {0U,1U}, bm_qlink1[1]);
+
     suqa::init_state();
 
     suqa::apply_h(bm_qlink0[0]);
@@ -68,14 +78,6 @@ void init_state(){
     suqa::apply_h(bm_qlink3[1]);
     suqa::apply_h(bm_qlink3[2]);
     
-//    suqa::apply_h(bm_qlink0[0]);
-//    suqa::apply_cx(bm_qlink0[0], bm_qlink3[0]);
-//    suqa::apply_h(bm_qlink0[1]);
-//    suqa::apply_cx(bm_qlink0[1], bm_qlink3[1]);
-//    suqa::apply_h(bm_qlink0[2]);
-//    suqa::apply_cx(bm_qlink0[2], bm_qlink3[2]);
-//    suqa::apply_mcx({bm_qlink3[0], bm_qlink3[2]}, {0U,1U}, bm_qlink3[1]);
-
 // automatically gauge-invariant initialization
 /*    .   .   .
  *    1   2
@@ -241,23 +243,23 @@ void evolution(const double& t, const int& n){
 
     for(uint ti=0; ti<(uint)n; ++ti){
         // V^{1/2}
-        self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+        self_plaquette(bm_qlink3, bm_qlink0, bm_qlink2, bm_qlink0);
         DEBUG_CALL(printf("after self_plaquette1()\n"));
         DEBUG_READ_STATE();
-        self_trace_operator(bm_qlink1, bm_qaux[0], theta);
+        self_trace_operator(bm_qlink3, bm_qaux[0], theta);
         DEBUG_CALL(printf("after self_trace_operator()\n"));
         DEBUG_READ_STATE();
-        inverse_self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+        inverse_self_plaquette(bm_qlink3, bm_qlink0, bm_qlink2, bm_qlink0);
         DEBUG_CALL(printf("after inverse_self_plaquette1()\n"));
         DEBUG_READ_STATE();
 
-        self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        self_plaquette(bm_qlink2, bm_qlink1, bm_qlink3, bm_qlink1);
         DEBUG_CALL(printf("after self_plaquette2()\n"));
         DEBUG_READ_STATE();
         self_trace_operator(bm_qlink2, bm_qaux[0], theta);
         DEBUG_CALL(printf("after self_trace_operator()\n"));
         DEBUG_READ_STATE();
-        inverse_self_plaquette(bm_qlink2, bm_qlink3, bm_qlink1, bm_qlink3);
+        inverse_self_plaquette(bm_qlink2, bm_qlink1, bm_qlink3, bm_qlink1);
         DEBUG_CALL(printf("after inverse_self_plaquette2()\n"));
         DEBUG_READ_STATE();
 
