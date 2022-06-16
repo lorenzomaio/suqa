@@ -59,7 +59,7 @@ void init_state(){
     suqa::apply_h(bm_qlink0[0]);
     suqa::apply_h(bm_qlink1[0]);
     suqa::apply_h(bm_qlink2[0]);
-    suqa::apply_h(bm_qlink3[0]);
+    //suqa::apply_h(bm_qlink3[0]);
 
 //    suqa::apply_h(bm_qlink0[0]);
 //    suqa::apply_cx(bm_qlink0[0], bm_qlink3[0]);
