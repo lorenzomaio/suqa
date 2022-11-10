@@ -54,7 +54,7 @@ void save_measures(string outfilename){
 
 int main(int argc, char** argv){
     if(argc < 7){
-        printf("usage: %s <beta> <g_beta> <metro steps> <reset each> <num ene qbits> <output file path> [--max-reverse <max reverse attempts> (20)] [--seed <seed> (random)] [--ene-min <min energy> (0.0)] [--ene-max <max energy> (1.0)] [--PE-steps <steps of PE evolution> (10)] [--thermalization <steps> (100)] [--record-reverse]\n", argv[0]);
+        printf("usage: %s <beta> <g_beta> <metro steps> <reset each> <num ene qbits> <output file path> [--max-reverse <max reverse attempts> (20)] [--seed <seed> (random)] [--ene-min <min energy> (0.0)] [--ene-max <max energy> (1.0)] [--PE-steps <steps of PE evolution> (10)] [--thermalization <steps> (100)] [--record-reverse] [--spectrum-file <filename>]\n", argv[0]);
         exit(1);
     }
 
@@ -86,6 +86,18 @@ int main(int argc, char** argv){
     qms::t_PE_shift = args.ene_min;
     qms::t_PE_factor = (qms::ene_levels-1)/(double)(qms::ene_levels*(args.ene_max-args.ene_min)); 
     qms::t_phase_estimation = qms::t_PE_factor*8.*atan(1.0); // 2*pi*t_PE_factor
+
+    if(not args.spectrum_file.empty()){
+        // first element: number of levels
+        FILE * file = fopen(args.spectrum_file.c_str(),"r");
+        fscanf(file,"%d\n",&num_phys_levels);
+        phys_spectrum = vector<double>(num_phys_levels);
+        for(int i=0; i<num_phys_levels; ++i){
+            fscanf(file,"%lg\n",&phys_spectrum[i]);
+        }
+
+        fclose(file);
+    }
 
     //XXX D4 specific!
 //    bm_qaux[0]=qms::nqubits-1;

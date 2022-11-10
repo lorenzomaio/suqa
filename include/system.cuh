@@ -14,14 +14,12 @@
 //const bmReg bm_qaux   =  {9, 10, 11};
 //const bmReg bm_qlink1 =  {12, 13, 14};
 
-const int syst_qbits = 13;      // number of system's qubits
-const bmReg bm_qlink0 =  {0,  1, 2};
-const bmReg bm_qlink1 =  {3,  4, 5};
-const bmReg bm_qlink2 =  {6,  7, 8};
-const bmReg bm_qlink3 =  {9, 10, 11};
-const bmReg bm_qlinks[4]={bm_qlink0,bm_qlink1,bm_qlink2,bm_qlink3};
-const bmReg bm_qaux   =  {12}; 
+const int syst_qbits = 3;      // number of system's qubits
+const bmReg bm_q =  {0, 1, 2};
 //TODO: remove ancillary qubit
+
+extern int num_phys_levels;
+extern std::vector<double> phys_spectrum;
 
 extern double g_beta;
 

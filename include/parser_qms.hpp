@@ -20,6 +20,7 @@ struct arg_list{
     int pe_steps = 10; 
     int thermalization = 100;
     bool record_reverse = false;
+    string spectrum_file = "";
     
     friend ostream& operator<<(ostream& o, const arg_list& al);
 };
@@ -38,6 +39,7 @@ ostream& operator<<(ostream& o, const arg_list& al){
     o<<"steps of PE evolution: "<<al.pe_steps<<endl;
     o<<"thermalization: "<<al.thermalization<<endl;
     o<<"record reverse: "<<al.record_reverse<<endl;
+    o<<"spectrum file:"<<al.spectrum_file<<endl;
     return o;
 }
 
@@ -127,6 +129,15 @@ void parse_arguments(arg_list& args, int argc, char** argv){
            throw "ERROR: set value after '--thermalization' flag"; 
        
        args.thermalization = stod(argmap_inv[tmp_idx+1].c_str(), NULL); 
+    }
+
+    // (string) spectrum_file
+    tmp_idx = argmap["--spectrum-file"];
+    if(tmp_idx>=fixed_args){
+       if(tmp_idx+1>= argc)
+           throw "ERROR: set value after '--spectrum-file' flag"; 
+       
+       args.spectrum_file = argmap_inv[tmp_idx+1]; 
     }
 
 

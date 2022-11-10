@@ -427,7 +427,6 @@ void suqa::apply_swap(const uint& q1, const uint& q2){
 #endif // GATECOUNT
 }
 
-#ifdef GPU
 void suqa::apply_phase_list(uint q0, uint q_size, const std::vector<double>& phases){
     if(!(q_size>0U and (uint)phases.size()==(1U<<q_size))){
         throw std::runtime_error("ERROR: in suqa::apply_phase_list(): invalid q_size or phases.size()");
@@ -464,7 +463,6 @@ void suqa::apply_phase_list(uint q0, uint q_size, const std::vector<double>& pha
     suqa::gatecounters.increment_g1g2(fact*(grA.ng1+grB.ng1),fact*(grA.ng2+grB.ng2));
 #endif // GATECOUNT
 }
-#endif // GPU
 
 /* Pauli Tensor Product rotations */
 
