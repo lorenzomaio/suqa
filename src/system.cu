@@ -1,14 +1,14 @@
 #include "system.cuh"
 
-/* d4 gauge theory - two plaquettes
+/* d4 gauge theory - one plaquette
  
     link state 3 qubits
-    system state: 4 links -> 12 qubits
+    system state: 2 links -> 6 qubits
     +1 ancillary qubit
 
-    .   .   .
-    2   3
-    o 0 o 1 .
+    .   .  
+    1   
+    o 0 .  
 
     operation table for the D4 group:
 
@@ -71,12 +71,6 @@ void init_state(){
     suqa::apply_h(bm_qlink1[0]);
     suqa::apply_h(bm_qlink1[1]);
     suqa::apply_h(bm_qlink1[2]);
-    suqa::apply_h(bm_qlink2[0]);
-    suqa::apply_h(bm_qlink2[1]);
-    suqa::apply_h(bm_qlink2[2]);
-    suqa::apply_h(bm_qlink3[0]);
-    suqa::apply_h(bm_qlink3[1]);
-    suqa::apply_h(bm_qlink3[2]);
     
 // automatically gauge-invariant initialization
 /*    .   .   .
@@ -154,12 +148,22 @@ void cphases(uint qaux, uint q0b, double alpha1, double alpha2){
     suqa::apply_cu1(q0b, qaux, alpha2, 1U);
 }
 
-void self_trace_operator(const bmReg& qr, const uint& qaux, double th){
-    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
-    cphases(qaux, qr[1], th, -th);
-    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
+void self_trace_operator(const bmReg& qr, const bmReg& qr1, double th){
+    //suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
+    //cphases(qaux, qr[1], th, -th);
+    //suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
 
-    // Alternative implementation
+    suqa::apply_mcu1({qr[2],qr1[2]}, {0U,0U}, qr[1], th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr[0]}, {0U,1U,0U}, qr[1], th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr[0]}, {0U,1U,1U}, qr[1], -th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr1[0]}, {1U,0U,0U}, qr[1], th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr1[0]}, {1U,0U,1U}, qr[1], -th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr[0],qr1[0]}, {1U,1U,0U,0U}, qr[1], th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr[0],qr1[0]}, {1U,1U,1U,1U}, qr[1], th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr[0],qr1[0]}, {1U,1U,0U,1U}, qr[1], -th);
+    suqa::apply_mcu1({qr[2],qr1[2], qr[0],qr1[0]}, {1U,1U,1U,0U}, qr[1], -th);   
+    
+// Alternative implementation (of the previous implementation)
 //    suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1],th);  // u1(θ) = [[1,0],[0,e^{iθ}]]
 //    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qr[1]);  
 //    suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1],-th);
@@ -243,24 +247,9 @@ void evolution(const double& t, const int& n){
 
     for(uint ti=0; ti<(uint)n; ++ti){
         // V^{1/2}
-        self_plaquette(bm_qlink3, bm_qlink0, bm_qlink2, bm_qlink0);
-        DEBUG_CALL(printf("after self_plaquette1()\n"));
-        DEBUG_READ_STATE();
-        self_trace_operator(bm_qlink3, bm_qaux[0], theta);
-        DEBUG_CALL(printf("after self_trace_operator()\n"));
-        DEBUG_READ_STATE();
-        inverse_self_plaquette(bm_qlink3, bm_qlink0, bm_qlink2, bm_qlink0);
-        DEBUG_CALL(printf("after inverse_self_plaquette1()\n"));
-        DEBUG_READ_STATE();
 
-        self_plaquette(bm_qlink2, bm_qlink1, bm_qlink3, bm_qlink1);
-        DEBUG_CALL(printf("after self_plaquette2()\n"));
-        DEBUG_READ_STATE();
-        self_trace_operator(bm_qlink2, bm_qaux[0], theta);
+        self_trace_operator(bm_qlink1, bm_qlink0, theta);
         DEBUG_CALL(printf("after self_trace_operator()\n"));
-        DEBUG_READ_STATE();
-        inverse_self_plaquette(bm_qlink2, bm_qlink1, bm_qlink3, bm_qlink1);
-        DEBUG_CALL(printf("after inverse_self_plaquette2()\n"));
         DEBUG_READ_STATE();
 
         // T
@@ -270,12 +259,6 @@ void evolution(const double& t, const int& n){
         fourier_transf_d4(bm_qlink1);
         DEBUG_CALL(printf("after fourier_transf_d4(bm_qlink1)\n"));
         DEBUG_READ_STATE();
-        fourier_transf_d4(bm_qlink2);
-        DEBUG_CALL(printf("after fourier_transf_d4(bm_qlink2)\n"));
-        DEBUG_READ_STATE();
-        fourier_transf_d4(bm_qlink3);
-        DEBUG_CALL(printf("after fourier_transf_d4(bm_qlink3)\n"));
-        DEBUG_READ_STATE();
 
         momentum_phase(bm_qlink0, bm_qaux[0], theta1, theta2);
         DEBUG_CALL(printf("after momentum_phase(bm_qlink0, bm_qaux[0], theta1, theta2)\n"));
@@ -283,20 +266,7 @@ void evolution(const double& t, const int& n){
         momentum_phase(bm_qlink1, bm_qaux[0], theta1, theta2);
         DEBUG_CALL(printf("after momentum_phase(bm_qlink1, bm_qaux[0], theta1, theta2)\n"));
         DEBUG_READ_STATE();
-        momentum_phase(bm_qlink2, bm_qaux[0], theta1, theta2);
-        DEBUG_CALL(printf("after momentum_phase(bm_qlink2, bm_qaux[0], theta1, theta2)\n"));
-        DEBUG_READ_STATE();
-        momentum_phase(bm_qlink3, bm_qaux[0], theta1, theta2);
-        DEBUG_CALL(printf("after momentum_phase(bm_qlink3, bm_qaux[0], theta1, theta2)\n"));
-        DEBUG_READ_STATE();
 
-
-        inverse_fourier_transf_d4(bm_qlink3);
-        DEBUG_CALL(printf("after inverse_fourier_transf_d4(bm_qlink3)\n"));
-        DEBUG_READ_STATE();
-        inverse_fourier_transf_d4(bm_qlink2);
-        DEBUG_CALL(printf("after inverse_fourier_transf_d4(bm_qlink2)\n"));
-        DEBUG_READ_STATE();
         inverse_fourier_transf_d4(bm_qlink1);
         DEBUG_CALL(printf("after inverse_fourier_transf_d4(bm_qlink1)\n"));
         DEBUG_READ_STATE();
@@ -387,12 +357,13 @@ const std::vector<double> op_vals = {2.0,0.0,-2.0, 0.0,0.0,0.0,0.0,0.0}; // eigv
  
 // change basis to the observable basis somewhere in the system registers
 void apply_measure_rotation(){
-    self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+    //self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+    //self_trace_operator(bm_qlink1, bm_qlink0, theta);
 }
 
 // inverse of the above function
 void apply_measure_antirotation(){
-    inverse_self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
+    //self_trace_operator(bm_qlink1, bm_qlink0, -theta);
 }
 
 // map the classical measure recorded in creg_vals
@@ -407,7 +378,7 @@ double get_meas_opvals(const uint& creg_vals){
 double measure_X(pcg& rgen){
     std::vector<uint> classics(op_bits);
     
-    apply_measure_rotation();
+    //apply_measure_rotation();
 
     std::vector<double> rdoubs(op_bits);
     for(auto& el : rdoubs){
@@ -415,7 +386,7 @@ double measure_X(pcg& rgen){
     }
     suqa::measure_qbits(bm_op, classics, rdoubs);
 
-    apply_measure_antirotation();
+    //apply_measure_antirotation();
 
     uint meas = 0U;
     for(uint i=0; i<op_bits; ++i){
@@ -426,12 +397,11 @@ double measure_X(pcg& rgen){
 }
 
 /* Moves facilities */
-#define NMoves 10
+#define NMoves 3
 
 //std::vector<double> C_weightsums(NMoves);
 
-std::vector<double> C_weightsums = {1./10., 2./10., 3./10., 4./10., 5./10., 
-    6./10., 7./10., 8./10., 9./10., 1.0};
+std::vector<double> C_weightsums = {1./3., 2./3., 1.0};
 //#define HNMoves (NMoves>>1)
 
 
@@ -442,9 +412,7 @@ void apply_C(const uint &Ci,double rot_angle){
     double actual_angle = rot_angle;
     switch (Ci){
         case 0:
-        case 1:
-        case 2:
-        case 3: // eigenvalues of kinetic hamiltonian on single gauge variable
+        case 1:// eigenvalues of kinetic hamiltonian on single gauge variable
         {
             const double theta1 = actual_angle*f1(g_beta);    
             const double theta2 = actual_angle*f2(g_beta);
@@ -454,122 +422,9 @@ void apply_C(const uint &Ci,double rot_angle){
             inverse_fourier_transf_d4(bm_qlinks[Ci]);
             break;
         }
-        case 4: // left plaquette
+        case 2: // plaquette
         {
-            // self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
-            // self_trace_operator(bm_qlink1, bm_qaux[0], actual_angle);
-            // inverse_self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
-
-            inversion(bm_qlink2); 
-            inversion(bm_qlink0); 
-            left_multiplication(bm_qlink0, bm_qlink3); 
-            left_multiplication(bm_qlink2, bm_qlink3);
-            inversion(bm_qlink0); 
-            inversion(bm_qlink2); 
-
-            left_multiplication(bm_qlink3, bm_qlink0);
-            
-            self_trace_operator(bm_qlink0, bm_qaux[0], actual_angle);
-
-            inversion(bm_qlink3); 
-            left_multiplication(bm_qlink3, bm_qlink0);
-            inversion(bm_qlink3); 
-            left_multiplication(bm_qlink2, bm_qlink3);
-            left_multiplication(bm_qlink0, bm_qlink3); 
-
-            break;
-        }
-        case 5: // rotate using trace of U_2^2
-        {
-            // square in the group:
-            // 010 (tr=-1) U_1=001 or 011; 000 (tr=+1) all the other cases 
-            // the global phase for all the other cases can be factored out
-
-            suqa::apply_cu1(bm_qlink2[0], bm_qlink2[2], actual_angle, 0U);
-            break;
-            
-        }
-        case 6: // rotate using trace of U_2
-        {
-            
-            // applies -rot_angle if 000
-            suqa::apply_x(bm_qlink2[1]);
-            suqa::apply_mcu1({bm_qlink2[0],bm_qlink2[2]}, {0U,0U}, bm_qlink2[1], -actual_angle);
-            suqa::apply_x(bm_qlink2[1]);
-
-            //applies rot_angle if 010
-            suqa::apply_mcu1({bm_qlink2[0],bm_qlink2[2]}, {0U,0U}, bm_qlink2[1], actual_angle);
-    
-            break;
-        }
-        case 7: // rotate using trace of U_1*U_0
-        {
-
-            left_multiplication(bm_qlink1, bm_qlink0);
-            self_trace_operator(bm_qlink0, bm_qaux[0], actual_angle);
-
-            inversion(bm_qlink1);
-            left_multiplication(bm_qlink1, bm_qlink0);
-            inversion(bm_qlink1);
-
-            break;
-        }
-        case 8: // rotate using trace of U_2^-1*U_0*U_1
-        {
-
-            inversion(bm_qlink2);
-            left_multiplication(bm_qlink1, bm_qlink2);
-            left_multiplication(bm_qlink0, bm_qlink2);
-
-            self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
-
-            inversion(bm_qlink0);
-            left_multiplication(bm_qlink0, bm_qlink2);
-            inversion(bm_qlink0);
-            inversion(bm_qlink1);
-            left_multiplication(bm_qlink1, bm_qlink2);
-            inversion(bm_qlink1);
-            inversion(bm_qlink2);
-
-            break;
-        }
-        case 9:
-        {
-            // rotate using trace of U_2^-1*U_0*U_3*U_1
-            
-            inversion(bm_qlink2);
-            left_multiplication(bm_qlink1, bm_qlink2);
-            left_multiplication(bm_qlink3, bm_qlink2);
-            left_multiplication(bm_qlink0, bm_qlink2);
-
-            self_trace_operator(bm_qlink2, bm_qaux[0], actual_angle);
-
-            inversion(bm_qlink0);
-            inversion(bm_qlink3);
-            inversion(bm_qlink1);
-            left_multiplication(bm_qlink0, bm_qlink2);
-            left_multiplication(bm_qlink3, bm_qlink2);
-            left_multiplication(bm_qlink1, bm_qlink2);
-            inversion(bm_qlink0);
-            inversion(bm_qlink3);
-            inversion(bm_qlink1);
-            
-            inversion(bm_qlink2);
-
-            // left_multiplication(bm_qlink3, bm_qlink1);
-            // left_multiplication(bm_qlink0, bm_qlink1);
-            // inversion(bm_qlink2);
-            // left_multiplication(bm_qlink2, bm_qlink1);
-            // inversion(bm_qlink2);
-            // self_trace_operator(bm_qlink1, bm_qaux[0], actual_angle);
-
-            // left_multiplication(bm_qlink2, bm_qlink1);
-            // inversion(bm_qlink0);
-            // left_multiplication(bm_qlink0, bm_qlink1);
-            // inversion(bm_qlink0);
-            // inversion(bm_qlink3);
-            // left_multiplication(bm_qlink3, bm_qlink1);
-            // inversion(bm_qlink3);
+            self_trace_operator(bm_qlink1, bm_qlink0, actual_angle);
             break;
         }
         

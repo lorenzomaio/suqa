@@ -337,7 +337,7 @@ void apply_W_inverse(){
 
 void apply_U(){
     DEBUG_CALL(std::cout<<"\n\nApply U"<<std::endl);
-    apply_C(gCi);
+    //apply_C(gCi);
     DEBUG_CALL(std::cout<<"\n\nAfter apply C = "<<gCi<<std::endl);
     DEBUG_READ_STATE();
 
@@ -357,7 +357,7 @@ void apply_U_inverse(){
     apply_Phi_inverse();
     DEBUG_CALL(std::cout<<"\n\nAfter inverse second phase estimation"<<std::endl);
     DEBUG_READ_STATE();
-    apply_C_inverse(gCi);
+    //apply_C_inverse(gCi);
     DEBUG_CALL(std::cout<<"\n\nAfter apply C inverse = "<<gCi<<std::endl);
     DEBUG_READ_STATE();
 }
