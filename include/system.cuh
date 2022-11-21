@@ -14,8 +14,8 @@
 //const bmReg bm_qaux   =  {9, 10, 11};
 //const bmReg bm_qlink1 =  {12, 13, 14};
 
-const int syst_qbits = 3;      // number of system's qubits
-const bmReg bm_q =  {0, 1, 2};
+const int syst_qbits = 8;      // number of system's qubits
+const bmReg bm_q =  {0,1,2,3,4,5,6,7};
 //TODO: remove ancillary qubit
 
 extern int num_phys_levels;
@@ -27,7 +27,7 @@ void init_state();
 
 void evolution(const double& t, const int& n);
 
-#define DEFAULT_THETA 0 //12./sqrt(2)
+#define DEFAULT_THETA (12./sqrt(2))
 void apply_C(const uint &Ci, double rot_angle=DEFAULT_THETA);
 void apply_C_inverse(const uint &Ci, double rot_angle=DEFAULT_THETA);
 

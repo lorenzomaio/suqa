@@ -100,7 +100,7 @@ double measure_X(pcg& rgen){
 }
 
 /* Moves facilities */
-#define NMoves 5
+#define NMoves 18
 
 //std::vector<double> C_weightsums(NMoves);
 
@@ -112,20 +112,47 @@ void apply_C(const uint &Ci,double rot_angle){
     //bool is_inverse = Ci>=HNMoves;
     //double actual_angle = (is_inverse)? -rot_angle : rot_angle;
 //    double actual_angle = rot_angle;
-    switch (Ci){
-        case 0:
-        case 1:
-        case 2:
-            suqa::apply_h(Ci);
-            break;
-        case 3:
-        case 4:
-            suqa::apply_cx(Ci-3,Ci-2);
-            break;
 
-        default:
-            throw std::runtime_error("ERROR: apply_C() unimplemented!\n");
+    if(Ci<14){
+        suqa::activate_gc_mask({7,},{0U,});
+        if(Ci<7)
+            suqa::apply_rx(Ci,rot_angle);
+        else
+            suqa::apply_ry(Ci%7,rot_angle);
+        suqa::deactivate_gc_mask({7,},{0U,});
+    }else if(Ci<16){
+        suqa::activate_gc_mask({4,5,6,},{0,1,0});
+        if(Ci==14)
+            suqa::apply_rx(7,rot_angle);
+        else
+            suqa::apply_ry(7,rot_angle);
+        suqa::deactivate_gc_mask({4,5,6,},{0,1,0});
+    }else{ //if(Ci<18)
+        suqa::activate_gc_mask({5,6,},{0,0});
+        if(Ci==16)
+            suqa::apply_rx(7,rot_angle);
+        else
+            suqa::apply_ry(7,rot_angle);
+        suqa::deactivate_gc_mask({5,6,},{0,0});
     }
+
+
+    // main subgroup rotation (8 qubits)
+    
+//    switch (Ci){
+//        case 0:
+//        case 1:
+//        case 2:
+//            suqa::apply_h(Ci);
+//            break;
+//        case 3:
+//        case 4:
+//            suqa::apply_cx(Ci-3,Ci-2);
+//            break;
+//
+//        default:
+//            throw std::runtime_error("ERROR: apply_C() unimplemented!\n");
+//    }
 
 
 }

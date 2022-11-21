@@ -94,7 +94,10 @@ extern GateCounterList gatecounters;
 void print_banner();
 
 void activate_gc_mask(const bmReg& q_controls);
+void activate_gc_mask(const bmReg& q_controls, const std::vector<uint>& ctype); // anti-control
 void deactivate_gc_mask(const bmReg& q_controls);
+void deactivate_gc_mask(const bmReg& q_controls, const std::vector<uint>& ctype);
+
 
 /* Utility procedures */
 double vnorm();
@@ -142,6 +145,11 @@ void apply_s(const bmReg& qs);
 void apply_u1(uint q, double phase);
 void apply_u1(uint q, uint q_mask, double phase);
 
+// matrix:   1     0
+//           0     exp(i phase)
+void apply_u1(uint q, double phase);
+void apply_u1(uint q, uint q_mask, double phase);
+
 // multiple qbit gates
 void apply_cx(const uint& q_control, const uint& q_target, const uint& q_mask=1U);
 
@@ -160,6 +168,10 @@ void apply_phase_list(uint q0, uint q_size, const std::vector<double>& phases);
 
 // rotation by phase in the direction of a pauli tensor product
 void apply_pauli_TP_rotation(const bmReg& q_apply, const std::vector<uint>& pauli_TPconst, double phase);
+
+void apply_rx(const uint& q, double phase);
+void apply_ry(const uint& q, double phase);
+void apply_rz(const uint& q, double phase);
 
 void apply_qft(const std::vector<uint>& qact);
 void apply_qft_inverse(const std::vector<uint>& qact);

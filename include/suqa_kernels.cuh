@@ -239,7 +239,7 @@ void kernel_suqa_swap(double *const state_re, double *const state_im, uint len, 
     }
 }
 
-#define MAX_PHASES_NUM 128
+#define MAX_PHASES_NUM 512
 __constant__ Complex const_phase_list[MAX_PHASES_NUM];
 //supports up to PHASES_NUM complex phases
 

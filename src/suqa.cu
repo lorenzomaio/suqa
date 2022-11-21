@@ -51,6 +51,20 @@ void suqa::activate_gc_mask(const bmReg& q_controls){
 #endif
 }
 
+void suqa::activate_gc_mask(const bmReg& q_controls, const std::vector<uint>& ctype){
+    int ii=0;
+    for(const auto& q : q_controls){
+        suqa::gc_mask |= 1U << q;
+        if(ctype[ii++]==0)
+            suqa::apply_x(q);
+    }
+
+#ifdef GATECOUNT
+    suqa::gatecounters.update_cmask_setbits(suqa::gc_mask);
+#endif
+}
+
+
 void suqa::deactivate_gc_mask(const bmReg& q_controls){
     for(const auto& q : q_controls)
         suqa::gc_mask &= ~(1U << q);
@@ -59,6 +73,20 @@ void suqa::deactivate_gc_mask(const bmReg& q_controls){
     suqa::gatecounters.update_cmask_setbits(suqa::gc_mask);
 #endif
 }
+
+void suqa::deactivate_gc_mask(const bmReg& q_controls, const std::vector<uint>& ctype){
+    int ii=0;
+    for(const auto& q : q_controls){
+        suqa::gc_mask &= ~(1U << q);
+        if(ctype[ii++]==0)
+            suqa::apply_x(q);
+    }
+
+#ifdef GATECOUNT
+    suqa::gatecounters.update_cmask_setbits(suqa::gc_mask);
+#endif
+}
+
 
 #ifdef GPU
 #include "suqa_kernels.cuh"
@@ -612,6 +640,17 @@ void suqa::apply_pauli_TP_rotation(const bmReg& q_apply, const std::vector<uint>
     }
 #endif // GATECOUNT
 }
+
+void suqa::apply_rx(const uint& q, double phase){
+    suqa::apply_pauli_TP_rotation({q,},{PAULI_X,},phase);
+}
+void suqa::apply_ry(const uint& q, double phase){
+    suqa::apply_pauli_TP_rotation({q,},{PAULI_Y,},phase);
+}
+void suqa::apply_rz(const uint& q, double phase){
+    suqa::apply_pauli_TP_rotation({q,},{PAULI_Z,},phase);
+}
+
 
 
 /* End of Pauli Tensor Product rotations */
