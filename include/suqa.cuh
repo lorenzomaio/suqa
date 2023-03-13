@@ -149,6 +149,7 @@ void apply_mcx(const bmReg& q_controls, const bmReg& q_mask, const uint& q_targe
 
 void apply_cu1(uint q_control, uint q_target, double phase, uint q_mask=1U);
 
+//TODO: specify behavior
 void apply_mcu1(const bmReg& q_controls, const uint& q_target, double phase);
 void apply_mcu1(const bmReg& q_controls, const bmReg& q_mask, const uint& q_target, double phase);
 
