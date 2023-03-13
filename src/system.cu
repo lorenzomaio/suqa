@@ -62,6 +62,29 @@ void init_state(){
     suqa::apply_h(bm_qlink0[2]);
     suqa::apply_cx(bm_qlink0[2], bm_qlink3[2]);
     suqa::apply_mcx({bm_qlink3[0], bm_qlink3[2]}, {0U,1U}, bm_qlink3[1]);
+
+// automatically gauge-invariant initialization
+/*    .   .   .
+ *    1   2
+ *    o 0 o I .
+ *   g1  g2
+ *  
+ *  U0 -> g2 U0 g1' -> g
+ *  U1 -> g1 U1 g1' -> I
+ *  U2 -> g2 U2 g2' -> I
+ *  U3 -> g1 U3 g2' -> g'
+ *
+ *  g=g2 g1', sum over g
+ *
+ *  GF: g2=g1 U3
+ *  
+ *  U0 -> U0n = g1 U3 U0 g1'     -> I
+ *  U1 -> U1n = g1 U1 g1'        -> I
+ *  U2 -> U2n = g1 U3 U2 U3' g1' -> I
+ *  U3 -> U3n = I                -> I
+ *
+ */
+
 }
 
 
@@ -120,10 +143,10 @@ void self_trace_operator(const bmReg& qr, double th){
 //    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
 
     // Alternative implementation
-    suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1],th);  // u1(θ) = [[1,0],[0,e^{iθ}]]
-    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qr[1]);  
-    suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1],-th);
-    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qr[1]);
+    suqa::apply_x(qr[1]);  
+    suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1], th);
+    suqa::apply_x(qr[1]);  
+    suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1],-th);  // u1(θ) = [[1,0],[0,e^{iθ}]]
 }
 
 void fourier_transf_d4(const bmReg& qr){

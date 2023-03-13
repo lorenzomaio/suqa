@@ -101,6 +101,8 @@ double vnorm();
 void vnormalize();
 
 void init_state();
+// initialize state with specific coefficients
+void init_state(std::vector<double> re_coeff, std::vector<double> im_coeff);
 
 void deallocate_state();
 void allocate_state(uint Dim);
@@ -139,6 +141,12 @@ void apply_s(const bmReg& qs);
 // matrix:   1     0
 //           0     exp(i phase)
 void apply_u1(uint q, double phase);
+// if q_mask==1
+// matrix:   1     0
+//           0     exp(i phase)
+// if q_mask==0
+// matrix:   exp(i phase)  0
+//           0             1
 void apply_u1(uint q, uint q_mask, double phase);
 
 // multiple qbit gates
