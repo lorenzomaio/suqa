@@ -52,6 +52,11 @@ __inline__ double f2(double b){
     return -log(tanh(b));
 }
 
+__inline__ double f_shift(double b){
+    return -log(4*sinh(b)*sinh(b));
+}
+
+
 void init_state(){
     suqa::init_state();
 
@@ -129,20 +134,7 @@ void inverse_self_plaquette(const bmReg& qr0, const bmReg& qr1, const bmReg& qr2
     left_multiplication(qr1, qr0);
 }
 
-//void cphases(uint qaux, uint q0b, double alpha1, double alpha2){
-//    // eigenvalues of the trace operator
-//    suqa::apply_cx(qaux, q0b);
-//    suqa::apply_cu1(q0b, qaux, alpha1, 1U);
-//    suqa::apply_cx(qaux, q0b);
-//    suqa::apply_cu1(q0b, qaux, alpha2, 1U);
-//}
-
 void self_trace_operator(const bmReg& qr, double th){
-//    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
-//    cphases(qaux, qr[1], th, -th);
-//    suqa::apply_mcx({qr[0],qr[2]}, {0U,0U}, qaux); 
-
-    // Alternative implementation
     suqa::apply_x(qr[1]);  
     suqa::apply_mcu1({qr[0],qr[2]}, {0U,0U}, qr[1], th);
     suqa::apply_x(qr[1]);  
@@ -189,27 +181,13 @@ void inverse_fourier_transf_d4(const bmReg& qr){
 }
 
 void momentum_phase(const bmReg& qr, double th1, double th2){
-//    suqa::apply_mcx(qr, {0U,0U,0U}, qaux);
-//    DEBUG_CALL(printf("\tafter suqa::apply_mcx(qr, {0U,0U,0U}, qaux)\n"));
-//    DEBUG_READ_STATE();
-//    suqa::apply_cx(qaux, qr[2]);
-//    suqa::apply_cu1(qaux, qr[2], th1);
-//    suqa::apply_cx(qaux, qr[2]);
-//    DEBUG_CALL(printf("\tafter suqa::apply_cu1(qaux, qr[2], th1, 0U)\n"));
-//    DEBUG_READ_STATE();
-//    suqa::apply_mcx(qr, {0U,0U,0U}, qaux);
-//    DEBUG_CALL(printf("\tafter suqa::apply_mcx(qr, {0U,0U,0U}, qaux)\n"));
-//    DEBUG_READ_STATE();
-
-
-    // Alternative implementation without qaux
     suqa::apply_x(qr[2]);
     suqa::apply_mcu1({qr[0],qr[1]}, {0U,0U}, qr[2],th1);
     suqa::apply_x(qr[2]);
 
     suqa::apply_u1(qr[2], th2);
-    DEBUG_CALL(printf("\tafter suqa::apply_u1(qr[2], th2)\n"));
-    DEBUG_READ_STATE();
+//    DEBUG_CALL(printf("\tafter suqa::apply_u1(qr[2], th2)\n"));
+//    DEBUG_READ_STATE();
 }
 
 void evolution(const double& t, const int& n){
@@ -219,6 +197,10 @@ void evolution(const double& t, const int& n){
     const double theta2 = dt*f2(g_beta);
     const double theta = 2*dt*g_beta;       // see Lamm's paper (the factor 2 is included here)
 //    printf("g_beta = %.16lg, dt = %.16lg, thetas: %.16lg %.16lg %.16lg\n", g_beta, dt, theta1, theta2, theta);
+
+
+    const double theta_shift = t*f_shift(g_beta);       // see Lamm's paper (the factor 2 is included here)
+    suqa::apply_pauli_TP_rotation({bm_qlink0[0]}, {PAULI_ID}, theta_shift);
 
     for(uint ti=0; ti<(uint)n; ++ti){
         self_plaquette(bm_qlink1, bm_qlink0, bm_qlink2, bm_qlink0);
